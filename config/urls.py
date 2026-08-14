@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from inventory import views
+from sales import views as sales_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,4 +26,12 @@ urlpatterns = [
     path('cikis/', auth_views.LogoutView.as_view(), name='logout'),
     path('', views.ana_sayfa, name='ana_sayfa'),
     path('urun/<int:urun_id>/', views.urun_detay, name='urun_detay'),
+    path('barkod-tara/', views.barkod_tara, name='barkod_tara'),
+    path('api/barkod/<str:barkod_no>/', views.barkod_sorgula, name='barkod_sorgula'),
+
+    path('satis/', sales_views.satis_ekrani, name='satis_ekrani'),
+    path('satis/barkod-ekle/<str:barkod_no>/', sales_views.sepete_barkod_ekle, name='sepete_barkod_ekle'),
+    path('satis/sil/<int:urun_id>/', sales_views.sepetten_cikar, name='sepetten_cikar'),
+    path('satis/tamamla/', sales_views.satisi_tamamla, name='satisi_tamamla'),
+    path('satis/<int:satis_id>/', sales_views.satis_detay, name='satis_detay'),
 ]

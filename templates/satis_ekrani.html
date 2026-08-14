@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Satış Ekranı{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Satış Ekranı</h1>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="input-group">
+            <input type="text" id="barkodInput" class="form-control" placeholder="Barkod okut ya da yaz, Enter'a bas" autofocus>
+            <button class="btn btn-primary" onclick="barkodEkle()">Ekle</button>
+        </div>
+        <div id="hataMesaji" class="alert alert-danger mt-3" style="display:none;"></div>
+    </div>
+</div>
+
+<table class="table">
+    <thead>
+        <tr><th>Ürün</th><th>Miktar</th><th>Birim Fiyat</th><th>Toplam</th><th></th></tr>
+    </thead>
+    <tbody>
+        {% for u in sepet_urunleri %}
+        <tr>
+            <td>{{ u.ad }}</td>
+            <td>{{ u.miktar }}</td>
+            <td>{{ u.birim_fiyat }} ₺</td>
+            <td>{{ u.satir_toplam }} ₺</td>
+            <td><a href="/satis/sil/{{ u.urun_id }}/" class="btn btn-sm btn-outline-danger">Sil</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">Sepet boş, barkod okutarak başlayın.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h3 class="text-end">Toplam: {{ toplam }} ₺</h3>
+
+<form method="post" action="{% url 'satisi_tamamla' %}" class="text-end">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary btn-lg" {% if not sepet_urunleri %}disabled{% endif %}>Satışı Tamamla</button>
+</form>
+
+<script>
+    function barkodEkle() {
+    const barkod = document.getElementById('barkodInput').value.trim();
+    if (!barkod) return;
+
+    document.getElementById('hataMesaji').style.display = 'none';
+
+    fetch(`/satis/barkod-ekle/${barkod}/`)
+        .then(res => res.json().then(data => ({ status: res.status, data })))
+        .then(({ status, data }) => {
+            if (data.basarili) {
+                location.reload();
+            } else {
+                document.getElementById('hataMesaji').innerText = data.hata || 'Bir hata oluştu.';
+                document.getElementById('hataMesaji').style.display = 'block';
+            }
+        })
+        .catch(err => {
+            document.getElementById('hataMesaji').innerText = 'Beklenmeyen bir hata oluştu: ' + err;
+            document.getElementById('hataMesaji').style.display = 'block';
+            console.error(err);
+        });
+}
+</script>
+{% endblock %}

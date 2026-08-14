@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Barkod Tara{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Barkod Tara</h1>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="mb-3">Barkod Numarası ile Ara (test için)</h5>
+        <div class="input-group">
+            <input type="text" id="manuelBarkod" class="form-control" placeholder="Barkod numarasını yaz">
+            <button class="btn btn-primary" onclick="manuelAra()">Ara</button>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="mb-3">Kamera ile Tara</h5>
+        <div id="reader" style="width: 100%; max-width: 500px;"></div>
+    </div>
+</div>
+
+<div id="sonuc"></div>
+
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script>
+    function urunGetir(barkodNo) {
+        fetch(`/api/barkod/${barkodNo}/`)
+            .then(response => {
+                if (!response.ok) throw new Error('bulunamadi');
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('sonuc').innerHTML = `
+                    <div class="card">
+                        <div class="card-body">
+                            <h3>${data.ad}</h3>
+                            <p>Kategori: ${data.kategori}</p>
+                            <p>Satış Fiyatı: ${data.satis_fiyati} ₺</p>
+                            <p>Stok: ${data.stok_miktari}</p>
+                            <a href="/urun/${data.urun_id}/" class="btn btn-primary">Ürün Detayına Git</a>
+                        </div>
+                    </div>
+                `;
+            })
+            .catch(() => {
+                document.getElementById('sonuc').innerHTML = `
+                    <div class="alert alert-danger">Bu barkoda ait ürün bulunamadı: ${barkodNo}</div>
+                `;
+            });
+    }
+
+    function manuelAra() {
+        const barkodNo = document.getElementById('manuelBarkod').value;
+        if (barkodNo) urunGetir(barkodNo);
+    }
+
+    function onScanSuccess(decodedText) {
+        html5QrcodeScanner.pause();
+        urunGetir(decodedText);
+    }
+
+    const html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 }, false);
+    html5QrcodeScanner.render(onScanSuccess);
+</script>
+{% endblock %}
