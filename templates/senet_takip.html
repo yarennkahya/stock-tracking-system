@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Senet Takip{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Senet Takip</h1>
+
+{% if gecikmis %}
+<div class="alert alert-danger">
+    <strong>⚠️ {{ gecikmis|length }} adet gecikmiş senet var!</strong>
+</div>
+<table class="table">
+    <thead><tr><th>Firma</th><th>Tip</th><th>Tutar</th><th>Vade</th></tr></thead>
+    <tbody>
+        {% for senet in gecikmis %}
+        <tr class="table-danger">
+            <td>{{ senet.firma.ad }}</td>
+            <td>{{ senet.get_tip_display }}</td>
+            <td>{{ senet.tutar }} ₺</td>
+            <td>{{ senet.vade_tarihi }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+<h4 class="mt-4">Yaklaşan Vadeler (7 gün içinde)</h4>
+<table class="table">
+    <thead><tr><th>Firma</th><th>Tip</th><th>Tutar</th><th>Vade</th></tr></thead>
+    <tbody>
+        {% for senet in yaklasan %}
+        <tr class="table-warning">
+            <td>{{ senet.firma.ad }}</td>
+            <td>{{ senet.get_tip_display }}</td>
+            <td>{{ senet.tutar }} ₺</td>
+            <td>{{ senet.vade_tarihi }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">Yaklaşan vade yok.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h4 class="mt-4">Diğer Bekleyen Senetler</h4>
+<table class="table">
+    <thead><tr><th>Firma</th><th>Tip</th><th>Tutar</th><th>Vade</th></tr></thead>
+    <tbody>
+        {% for senet in diger_bekleyenler %}
+        <tr>
+            <td>{{ senet.firma.ad }}</td>
+            <td>{{ senet.get_tip_display }}</td>
+            <td>{{ senet.tutar }} ₺</td>
+            <td>{{ senet.vade_tarihi }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">Yok.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

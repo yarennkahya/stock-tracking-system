@@ -19,6 +19,7 @@ from django.urls import path
 from django.contrib.auth import views as auth_views
 from inventory import views
 from sales import views as sales_views
+from accounts import views as accounts_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -34,4 +35,6 @@ urlpatterns = [
     path('satis/sil/<int:urun_id>/', sales_views.sepetten_cikar, name='sepetten_cikar'),
     path('satis/tamamla/', sales_views.satisi_tamamla, name='satisi_tamamla'),
     path('satis/<int:satis_id>/', sales_views.satis_detay, name='satis_detay'),
-]
+   path('firmalar/', accounts_views.firma_listesi, name='firma_listesi'),
+    path('senet-takip/', accounts_views.senet_takip, name='senet_takip'),
+    ]
