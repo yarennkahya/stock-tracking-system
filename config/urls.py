@@ -16,10 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.contrib.auth import views as auth_views
 from inventory import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('giris/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
+    path('cikis/', auth_views.LogoutView.as_view(), name='logout'),
     path('', views.ana_sayfa, name='ana_sayfa'),
     path('urun/<int:urun_id>/', views.urun_detay, name='urun_detay'),
 ]
