@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ urun.ad }}{% endblock %}
+
+{% block content %}
+    <a href="/" class="btn btn-link mb-3">&larr; Ürün Listesine Dön</a>
+
+    <div class="card">
+        <div class="card-body">
+            <h2 class="card-title">{{ urun.ad }}</h2>
+            <p class="text-muted">{{ urun.kategori }}</p>
+
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">Alış Fiyatı: {{ urun.alis_fiyati }} ₺</li>
+                <li class="list-group-item">Satış Fiyatı: {{ urun.satis_fiyati }} ₺</li>
+                <li class="list-group-item">Stok Miktarı: {{ urun.stok_miktari }}</li>
+                <li class="list-group-item">Kritik Stok Seviyesi: {{ urun.kritik_stok_seviyesi }}</li>
+            </ul>
+        </div>
+    </div>
+{% endblock %}

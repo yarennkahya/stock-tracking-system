@@ -16,7 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from inventory import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', views.ana_sayfa, name='ana_sayfa'),
+    path('urun/<int:urun_id>/', views.urun_detay, name='urun_detay'),
 ]
