@@ -1,0 +1,20 @@
+<ul class="nav flex-column">
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'ana_sayfa' %}active{% endif %}" href="{% url 'ana_sayfa' %}">Ürünler</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'satis_ekrani' %}active{% endif %}" href="{% url 'satis_ekrani' %}">Satış Ekranı</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'barkod_tara' %}active{% endif %}" href="{% url 'barkod_tara' %}">Barkod Tara</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'firma_listesi' %}active{% endif %}" href="{% url 'firma_listesi' %}">Firmalar</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'senet_takip' %}active{% endif %}" href="{% url 'senet_takip' %}">Senet Takip</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/admin/">Admin Panel</a>
+    </li>
+</ul>

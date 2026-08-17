@@ -22,9 +22,7 @@
             --font-body: 'Inter', system-ui, -apple-system, sans-serif;
         }
 
-        html {
-            font-size: 18px;
-        }
+        html { font-size: 18px; }
 
         body {
             background: var(--color-bg);
@@ -39,27 +37,6 @@
             color: var(--color-ink);
         }
 
-        .app-navbar {
-            background: var(--color-surface) !important;
-            border-bottom: 3px solid var(--color-accent);
-            padding-top: .75rem;
-            padding-bottom: .75rem;
-        }
-        .app-navbar .navbar-brand {
-            color: var(--color-ink) !important;
-            font-weight: 700;
-            font-size: 1.3rem;
-        }
-        .app-navbar .nav-link {
-            color: var(--color-steel) !important;
-            font-weight: 600;
-            font-size: 1.05rem;
-            padding: .5rem 1rem !important;
-        }
-        .app-navbar .nav-link:hover {
-            color: var(--color-accent) !important;
-        }
-
         .barcode-strip {
             height: 5px;
             background-image: repeating-linear-gradient(90deg,
@@ -68,6 +45,84 @@
                 var(--color-accent) 12px 16px, transparent 16px 20px);
             opacity: .5;
         }
+
+        .app-shell {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            flex-shrink: 0;
+            background: var(--color-surface);
+            border-right: 3px solid var(--color-accent);
+            padding: 1.5rem 1.25rem;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar-brand {
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--color-ink) !important;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 2rem;
+        }
+
+        .sidebar .nav-link {
+            color: var(--color-steel);
+            font-weight: 600;
+            font-size: 1.02rem;
+            padding: .65rem .9rem;
+            border-radius: 6px;
+            margin-bottom: .2rem;
+        }
+        .sidebar .nav-link:hover {
+            background: var(--color-accent-soft);
+            color: var(--color-accent);
+        }
+        .sidebar .nav-link.active {
+            background: var(--color-accent);
+            color: #FFFFFF;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 1.5rem;
+            border-top: 1px solid #E5E7E4;
+        }
+        .sidebar-user {
+            font-size: .95rem;
+            color: var(--color-steel);
+            margin-bottom: .5rem;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        .mobile-topbar {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #E5E7E4;
+            background: var(--color-surface);
+        }
+        .mobile-topbar .sidebar-brand { margin-bottom: 0; }
+
+        @media (min-width: 992px) {
+            .mobile-topbar, .offcanvas { display: none !important; }
+        }
+        @media (max-width: 991.98px) {
+            .sidebar { display: none !important; }
+        }
+
+        .page-content { padding: 1.75rem 1.5rem; }
 
         .btn {
             padding: .65rem 1.25rem;
@@ -84,10 +139,7 @@
             border-color: var(--color-accent) !important;
         }
 
-        .badge {
-            font-size: .9rem;
-            padding: .5em .8em;
-        }
+        .badge { font-size: .9rem; padding: .5em .8em; }
         .badge.bg-danger { background-color: var(--color-critical) !important; }
         .badge.bg-success { background-color: var(--color-ok) !important; }
 
@@ -113,49 +165,59 @@
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg app-navbar">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">Stock Tracking System</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-    {% if user.is_authenticated %}
-        <li class="nav-item">
-            <a class="nav-link" href="/">Ürünler</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="/admin/">Admin Panel</a>
-        </li>
-        <li class="nav-item">
-    <a class="nav-link" href="/satis/">Satış Ekranı</a>
-</li>
-<li class="nav-item">
-    <a class="nav-link" href="/firmalar/">Firmalar</a>
-</li>
-<li class="nav-item">
-    <a class="nav-link" href="/senet-takip/">Senet Takip</a>
-</li>
-        <li class="nav-item">
-            <span class="nav-link">Merhaba, {{ user.username }}</span>
-        </li>
-        <li class="nav-item">
-            <form method="post" action="{% url 'logout' %}" class="d-inline">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-outline-primary btn-sm">Çıkış Yap</button>
-            </form>
-        </li>
-    {% endif %}
-</ul>
-            </div>
-        </div>
-    </nav>
     <div class="barcode-strip"></div>
 
-    <div class="container mt-4">
-        {% block content %}
-        {% endblock %}
+    <div class="app-shell">
+
+        <aside class="sidebar d-flex flex-column">
+            <a href="{% url 'ana_sayfa' %}" class="sidebar-brand">Stock Tracking System</a>
+
+            {% if user.is_authenticated %}
+                {% include 'partials/sidebar_nav.html' %}
+                <div class="sidebar-footer">
+                    <div class="sidebar-user">Merhaba, {{ user.username }}</div>
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-primary btn-sm w-100">Çıkış Yap</button>
+                    </form>
+                </div>
+            {% endif %}
+        </aside>
+
+        <div class="main-content">
+
+            <div class="mobile-topbar">
+                <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar">
+                    ☰ Menü
+                </button>
+                <span class="sidebar-brand">Stock Tracking System</span>
+            </div>
+
+            <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileSidebar">
+                <div class="offcanvas-header">
+                    <span class="sidebar-brand mb-0">Stock Tracking System</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+                </div>
+                <div class="offcanvas-body d-flex flex-column">
+                    {% if user.is_authenticated %}
+                        {% include 'partials/sidebar_nav.html' %}
+                        <div class="sidebar-footer">
+                            <div class="sidebar-user">Merhaba, {{ user.username }}</div>
+                            <form method="post" action="{% url 'logout' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-primary btn-sm w-100">Çıkış Yap</button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="page-content">
+                {% block content %}
+                {% endblock %}
+            </div>
+
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
