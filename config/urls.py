@@ -20,6 +20,7 @@ from django.contrib.auth import views as auth_views
 from inventory import views
 from sales import views as sales_views
 from accounts import views as accounts_views
+from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -29,6 +30,7 @@ urlpatterns = [
     path('urun/<int:urun_id>/', views.urun_detay, name='urun_detay'),
     path('barkod-tara/', views.barkod_tara, name='barkod_tara'),
     path('api/barkod/<str:barkod_no>/', views.barkod_sorgula, name='barkod_sorgula'),
+    path('i18n/', include('django.conf.urls.i18n')),
 
     path('satis/', sales_views.satis_ekrani, name='satis_ekrani'),
     path('satis/barkod-ekle/<str:barkod_no>/', sales_views.sepete_barkod_ekle, name='sepete_barkod_ekle'),

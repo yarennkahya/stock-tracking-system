@@ -1,3 +1,4 @@
+{% load i18n %}
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -21,7 +22,26 @@
             --color-critical: #A32F22;
             --font-body: 'Inter', system-ui, -apple-system, sans-serif;
         }
+   [data-theme="dark"] {
+    --color-bg: #1A1D21;
+    --color-surface: #22262B;
+    --color-ink: #E8E9EA;
+    --color-steel: #9AA5B1;
+    --color-accent: #E8890C;
+    --color-accent-soft: #3A2E1C;
+    --color-ok: #4FA862;
+    --color-critical: #E0564A;
+}
 
+[data-theme="dark"] .card,
+[data-theme="dark"] .sidebar,
+[data-theme="dark"] .mobile-topbar {
+    border-color: #34383E;
+}
+[data-theme="dark"] .table thead th,
+[data-theme="dark"] .sidebar-footer {
+    border-color: #34383E !important;
+}
         html { font-size: 18px; }
 
         body {
@@ -175,8 +195,22 @@
             {% if user.is_authenticated %}
                 {% include 'partials/sidebar_nav.html' %}
                 <div class="sidebar-footer">
-                    <div class="sidebar-user">Merhaba, {{ user.username }}</div>
-                    <form method="post" action="{% url 'logout' %}">
+    <div class="sidebar-user">Merhaba, {{ user.username }}</div>
+
+    <form action="{% url 'set_language' %}" method="post" class="mb-2">
+        {% csrf_token %}
+        <input name="next" type="hidden" value="{{ request.path }}">
+        {% get_current_language as MEVCUT_DIL %}
+        <select name="language" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="tr" {% if MEVCUT_DIL == 'tr' %}selected{% endif %}>Türkçe</option>
+            <option value="en" {% if MEVCUT_DIL == 'en' %}selected{% endif %}>English</option>
+        </select>
+    </form>
+
+    <button type="button" class="btn btn-outline-primary btn-sm w-100 mb-2" onclick="temaDegistir()">
+        <span id="temaBtnMetni">🌙 Koyu Tema</span>
+    </button>
+    <form method="post" action="{% url 'logout' %}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-outline-primary btn-sm w-100">Çıkış Yap</button>
                     </form>
@@ -203,6 +237,18 @@
                         {% include 'partials/sidebar_nav.html' %}
                         <div class="sidebar-footer">
                             <div class="sidebar-user">Merhaba, {{ user.username }}</div>
+                            <form action="{% url 'set_language' %}" method="post" class="mb-2">
+    {% csrf_token %}
+    <input name="next" type="hidden" value="{{ request.path }}">
+    {% get_current_language as MEVCUT_DIL %}
+    <select name="language" class="form-select form-select-sm" onchange="this.form.submit()">
+        <option value="tr" {% if MEVCUT_DIL == 'tr' %}selected{% endif %}>Türkçe</option>
+        <option value="en" {% if MEVCUT_DIL == 'en' %}selected{% endif %}>English</option>
+    </select>
+</form>
+                            <button type="button" class="btn btn-outline-primary btn-sm w-100 mb-2" onclick="temaDegistir()">
+        <span id="temaBtnMetni">🌙 Koyu Tema</span>
+    </button>
                             <form method="post" action="{% url 'logout' %}">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-outline-primary btn-sm w-100">Çıkış Yap</button>
@@ -221,5 +267,27 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function temaUygula(tema) {
+            document.documentElement.setAttribute('data-theme', tema);
+            const btnMetni = document.getElementById('temaBtnMetni');
+            if (btnMetni) {
+                btnMetni.textContent = tema === 'dark' ? '☀️ Açık Tema' : '🌙 Koyu Tema';
+            }
+        }
+
+        function temaDegistir() {
+            const mevcutTema = document.documentElement.getAttribute('data-theme');
+            const yeniTema = mevcutTema === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('tema', yeniTema);
+            temaUygula(yeniTema);
+        }
+
+        (function() {
+            const kayitliTema = localStorage.getItem('tema') || 'light';
+            temaUygula(kayitliTema);
+        })();
+    </script>
 </body>
 </html>
