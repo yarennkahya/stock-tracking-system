@@ -1,0 +1,25 @@
+{% load i18n %}
+<div class="dropdown">
+    <button class="account-trigger dropdown-toggle" type="button" data-bs-toggle="dropdown">
+        <span class="account-avatar">{{ user.username|slice:":1"|upper }}</span>
+        <span class="account-name-inline d-none d-lg-inline">{{ user.username }}</span>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end p-2" style="min-width: 210px;">
+        <li class="px-2 pb-2 mb-2 border-bottom">
+            <div class="fw-semibold">{{ user.username }}</div>
+        </li>
+        <li class="px-2 pb-2 text-center">
+            <button type="button" id="themeToggleBtn" class="theme-toggle" aria-label="Koyu temaya geç" title="Koyu temaya geç">
+                <i class="bi bi-moon-stars-fill"></i>
+            </button>
+        </li>
+        <li class="px-2 pt-2 border-top">
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+                    <i class="bi bi-box-arrow-right"></i> {% trans "Çıkış Yap" %}
+                </button>
+            </form>
+        </li>
+    </ul>
+</div>

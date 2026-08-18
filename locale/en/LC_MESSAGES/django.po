@@ -1,0 +1,90 @@
+# English translations
+msgid ""
+msgstr ""
+"Project-Id-Version: Stock Tracking System\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-17 11:30+0000\n"
+"PO-Revision-Date: 2026-08-17 11:30+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: templates/ana_sayfa.html:4 templates/partials/sidebar_nav.html:5
+msgid "Ürünler"
+msgstr "Products"
+
+#: templates/ana_sayfa.html:10
+msgid "Ürün Listesi"
+msgstr "Product List"
+
+#: templates/ana_sayfa.html:11
+msgid "Stoktaki tüm ürünleri görüntüle ve yönet"
+msgstr "View and manage all products in stock"
+
+#: templates/ana_sayfa.html:18
+msgid "Ürün Adı"
+msgstr "Product Name"
+
+#: templates/ana_sayfa.html:19
+msgid "Kategori"
+msgstr "Category"
+
+#: templates/ana_sayfa.html:20
+msgid "Satış Fiyatı"
+msgstr "Sale Price"
+
+#: templates/ana_sayfa.html:21
+msgid "Stok"
+msgstr "Stock"
+
+#: templates/ana_sayfa.html:33
+msgid "Kritik!"
+msgstr "Critical!"
+
+#: templates/ana_sayfa.html:39
+msgid "Detay"
+msgstr "Details"
+
+#: templates/ana_sayfa.html:44
+msgid "Henüz ürün eklenmemiş."
+msgstr "No products have been added yet."
+
+#: templates/partials/account_menu.html:12
+msgid "Tema"
+msgstr "Theme"
+
+#: templates/partials/account_menu.html:15
+msgid "Açık"
+msgstr "Light"
+
+#: templates/partials/account_menu.html:18
+msgid "Koyu"
+msgstr "Dark"
+
+#: templates/partials/account_menu.html:26
+msgid "Çıkış Yap"
+msgstr "Log out"
+
+#: templates/partials/sidebar_nav.html:10
+msgid "Satış Ekranı"
+msgstr "Sales Screen"
+
+#: templates/partials/sidebar_nav.html:15
+msgid "Barkod Tara"
+msgstr "Scan Barcode"
+
+#: templates/partials/sidebar_nav.html:20
+msgid "Firmalar"
+msgstr "Companies"
+
+#: templates/partials/sidebar_nav.html:25
+msgid "Senet Takip"
+msgstr "Promissory Note Tracking"
+
+#: templates/partials/sidebar_nav.html:30
+msgid "Admin Panel"
+msgstr "Admin Panel"

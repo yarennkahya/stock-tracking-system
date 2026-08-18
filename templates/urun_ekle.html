@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "Ürün Ekle" %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex" style="gap: var(--space-4);">
+        <div class="page-header-icon"><i class="bi bi-plus-circle"></i></div>
+        <div>
+            <h1>{% trans "Yeni Ürün Ekle" %}</h1>
+            <p class="page-header-sub">{% trans "Manuel olarak ya da barkod okutarak yeni ürün ekle" %}</p>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="max-width: 600px;">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="mb-3">
+                <label class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-check-lg"></i> {% trans "Ürünü Kaydet" %}
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

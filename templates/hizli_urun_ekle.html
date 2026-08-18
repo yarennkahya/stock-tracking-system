@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "Hızlı Ürün Ekle" %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex" style="gap: var(--space-4);">
+        <div class="page-header-icon"><i class="bi bi-lightning-charge"></i></div>
+        <div>
+            <h1>{% trans "Hızlı Ürün Ekle" %}</h1>
+            <p class="page-header-sub">{% trans "Barkod okut, bilgileri doldur, sıradaki barkoda hazır ol" %}</p>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <label class="form-label">{% trans "Barkod" %}</label>
+        <input type="text" id="barkodInput" class="form-control form-control-lg" placeholder="{% trans 'Barkodu okut ya da yaz, Enter’a bas' %}" autofocus>
+    </div>
+</div>
+
+<div id="mevcutUyari" class="alert alert-warning d-none align-items-center justify-content-between">
+    <span id="mevcutMetin"></span>
+    <button type="button" class="btn btn-sm btn-primary" id="stokArtirBtn"><i class="bi bi-plus-lg"></i> {% trans "Stoğa 1 Ekle" %}</button>
+</div>
+
+<div id="yeniUrunKart" class="card mb-4 d-none">
+    <div class="card-body">
+        <h5 class="mb-3"><i class="bi bi-plus-circle"></i> {% trans "Yeni Ürün — Bilgileri Doldur" %}</h5>
+        <div class="mb-3">
+            <label class="form-label">{% trans "Barkod" %}</label>
+            <input type="text" id="formBarkod" class="form-control" readonly>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">{% trans "Kategori" %}</label>
+            <select id="formKategori" class="form-select">
+                {% for k in kategoriler %}
+                <option value="{{ k.id }}">{{ k.ad }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">{% trans "Ürün Adı" %}</label>
+            <input type="text" id="formAd" class="form-control" placeholder="{% trans 'örn. Matkap 13mm' %}">
+        </div>
+        <div class="row">
+            <div class="col-4 mb-3">
+                <label class="form-label">{% trans "Alış Fiyatı" %}</label>
+                <input type="number" step="0.01" id="formAlisFiyati" class="form-control" value="0">
+            </div>
+            <div class="col-4 mb-3">
+                <label class="form-label">{% trans "Satış Fiyatı" %}</label>
+                <input type="number" step="0.01" id="formSatisFiyati" class="form-control" value="0">
+            </div>
+            <div class="col-4 mb-3">
+                <label class="form-label">{% trans "Stok Miktarı" %}</label>
+                <input type="number" id="formStokMiktari" class="form-control" value="1">
+            </div>
+        </div>
+        <div id="formHata" class="alert alert-danger d-none"></div>
+        <button type="button" class="btn btn-primary w-100" id="urunKaydetBtn"><i class="bi bi-check-lg"></i> {% trans "Kaydet ve Sıradaki Barkoda Geç" %}</button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="mb-3"><i class="bi bi-list-check"></i> {% trans "Bu Oturumda Eklenenler" %} (<span id="eklenenSayac">0</span>)</h5>
+        <table class="table">
+            <thead>
+                <tr><th>{% trans "Ürün" %}</th><th>{% trans "Barkod" %}</th><th>{% trans "Stok" %}</th></tr>
+            </thead>
+            <tbody id="eklenenTbody">
+                <tr id="eklenenBos"><td colspan="3">{% trans "Henüz ürün eklenmedi." %}</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+let sonKategoriId = null;
+let eklenenSayisi = 0;
+let mevcutUrunId = null;
+
+const barkodInput = document.getElementById('barkodInput');
+const mevcutUyari = document.getElementById('mevcutUyari');
+const mevcutMetin = document.getElementById('mevcutMetin');
+const stokArtirBtn = document.getElementById('stokArtirBtn');
+const yeniUrunKart = document.getElementById('yeniUrunKart');
+const formBarkod = document.getElementById('formBarkod');
+const formKategori = document.getElementById('formKategori');
+const formAd = document.getElementById('formAd');
+const formAlisFiyati = document.getElementById('formAlisFiyati');
+const formSatisFiyati = document.getElementById('formSatisFiyati');
+const formStokMiktari = document.getElementById('formStokMiktari');
+const formHata = document.getElementById('formHata');
+
+function panelleriGizle() {
+    mevcutUyari.classList.add('d-none');
+    mevcutUyari.classList.remove('d-flex');
+    yeniUrunKart.classList.add('d-none');
+    formHata.classList.add('d-none');
+}
+
+function eklenenListeyeEkle(ad, barkod, stok) {
+    document.getElementById('eklenenBos')?.remove();
+    const tbody = document.getElementById('eklenenTbody');
+    const satir = document.createElement('tr');
+    satir.innerHTML = `<td>${ad}</td><td>${barkod || '-'}</td><td>${stok}</td>`;
+    tbody.prepend(satir);
+    eklenenSayisi++;
+    document.getElementById('eklenenSayac').innerText = eklenenSayisi;
+}
+
+barkodInput.addEventListener('keypress', function(e) {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const barkod = barkodInput.value.trim();
+    if (!barkod) return;
+
+    panelleriGizle();
+
+    fetch(`/api/urun-kontrol/${encodeURIComponent(barkod)}/`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.bulundu) {
+                mevcutUrunId = data.urun_id;
+                mevcutMetin.innerText = `Bu ürün zaten kayıtlı: ${data.ad} (mevcut stok: ${data.stok_miktari})`;
+                mevcutUyari.classList.remove('d-none');
+                mevcutUyari.classList.add('d-flex');
+            } else {
+                formBarkod.value = barkod;
+                formAd.value = '';
+                formAlisFiyati.value = '0';
+                formSatisFiyati.value = '0';
+                formStokMiktari.value = '1';
+                if (sonKategoriId) formKategori.value = sonKategoriId;
+                yeniUrunKart.classList.remove('d-none');
+                formAd.focus();
+            }
+        })
+        .catch(err => console.error(err));
+
+    barkodInput.value = '';
+});
+
+stokArtirBtn.addEventListener('click', function() {
+    fetch(`/api/stok-artir/${mevcutUrunId}/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.basarili) {
+            panelleriGizle();
+            barkodInput.focus();
+        }
+    });
+});
+
+function urunKaydet() {
+    if (!formAd.value.trim()) {
+        formHata.innerText = 'Ürün adı zorunlu.';
+        formHata.classList.remove('d-none');
+        formAd.focus();
+        return;
+    }
+
+    const veriler = new URLSearchParams();
+    veriler.append('barkod_no', formBarkod.value);
+    veriler.append('ad', formAd.value.trim());
+    veriler.append('kategori_id', formKategori.value);
+    veriler.append('alis_fiyati', formAlisFiyati.value || 0);
+    veriler.append('satis_fiyati', formSatisFiyati.value || 0);
+    veriler.append('stok_miktari', formStokMiktari.value || 1);
+
+    fetch('{% url "hizli_urun_kaydet" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: veriler.toString()
+    })
+    .then(res => res.json().then(data => ({ status: res.status, data })))
+    .then(({ status, data }) => {
+        if (data.basarili) {
+            sonKategoriId = data.kategori_id;
+            eklenenListeyeEkle(data.ad, formBarkod.value, formStokMiktari.value);
+            panelleriGizle();
+            barkodInput.focus();
+        } else {
+            formHata.innerText = data.hata || 'Bir hata oluştu.';
+            formHata.classList.remove('d-none');
+        }
+    })
+    .catch(err => {
+        formHata.innerText = 'Beklenmeyen hata: ' + err;
+        formHata.classList.remove('d-none');
+    });
+}
+
+document.getElementById('urunKaydetBtn').addEventListener('click', urunKaydet);
+
+formStokMiktari.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); urunKaydet(); }
+});
+</script>
+{% endblock %}

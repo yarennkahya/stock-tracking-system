@@ -3,8 +3,13 @@
 {% block title %}Barkod Tara{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Barkod Tara</h1>
-
+<div class="page-header">
+    <div class="page-header-icon"><i class="bi bi-upc-scan"></i></div>
+    <div>
+        <h1>Barkod Tara</h1>
+        <p class="page-header-sub">Kamera veya barkod okuyucu ile ürün sorgula</p>
+    </div>
+</div>
 <div class="card mb-4">
     <div class="card-body">
         <h5 class="mb-3">Barkod Numarası ile Ara (test için)</h5>
@@ -45,11 +50,14 @@
                     </div>
                 `;
             })
-            .catch(() => {
-                document.getElementById('sonuc').innerHTML = `
-                    <div class="alert alert-danger">Bu barkoda ait ürün bulunamadı: ${barkodNo}</div>
-                `;
-            });
+           .catch(() => {
+    document.getElementById('sonuc').innerHTML = `
+        <div class="alert alert-danger d-flex justify-content-between align-items-center">
+            <span>Bu barkoda ait ürün bulunamadı: ${barkodNo}</span>
+            <a href="/urun/ekle/?barkod=${encodeURIComponent(barkodNo)}" class="btn btn-sm btn-primary">Yeni Ürün Olarak Ekle</a>
+        </div>
+    `;
+});
     }
 
     function manuelAra() {

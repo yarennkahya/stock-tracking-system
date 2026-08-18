@@ -2,8 +2,13 @@
 {% block title %}Senet Takip{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Senet Takip</h1>
-
+<div class="page-header">
+    <div class="page-header-icon"><i class="bi bi-bank"></i></div>
+    <div>
+        <h1>Senet Takip</h1>
+        <p class="page-header-sub">Vadesi yaklaşan ve geçmiş ödemeleri takip et</p>
+    </div>
+</div>
 {% if gecikmis %}
 <div class="alert alert-danger">
     <strong>⚠️ {{ gecikmis|length }} adet gecikmiş senet var!</strong>

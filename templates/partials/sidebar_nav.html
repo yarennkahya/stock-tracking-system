@@ -1,20 +1,38 @@
+{% load i18n %}
 <ul class="nav flex-column">
     <li class="nav-item">
-        <a class="nav-link {% if request.resolver_match.url_name == 'ana_sayfa' %}active{% endif %}" href="{% url 'ana_sayfa' %}">Ürünler</a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'ana_sayfa' %}active{% endif %}" href="{% url 'ana_sayfa' %}">
+            <i class="bi bi-box-seam"></i> {% trans "Ürünler" %}
+        </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link {% if request.resolver_match.url_name == 'satis_ekrani' %}active{% endif %}" href="{% url 'satis_ekrani' %}">Satış Ekranı</a>
+    <a class="nav-link {% if request.resolver_match.url_name == 'hizli_urun_ekle' %}active{% endif %}" href="{% url 'hizli_urun_ekle' %}">
+        <i class="bi bi-lightning-charge"></i> {% trans "Hızlı Ürün Ekle" %}
+    </a>
+</li>
+    <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'satis_ekrani' %}active{% endif %}" href="{% url 'satis_ekrani' %}">
+            <i class="bi bi-cash-coin"></i> {% trans "Satış Ekranı" %}
+        </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link {% if request.resolver_match.url_name == 'barkod_tara' %}active{% endif %}" href="{% url 'barkod_tara' %}">Barkod Tara</a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'barkod_tara' %}active{% endif %}" href="{% url 'barkod_tara' %}">
+            <i class="bi bi-upc-scan"></i> {% trans "Barkod Tara" %}
+        </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link {% if request.resolver_match.url_name == 'firma_listesi' %}active{% endif %}" href="{% url 'firma_listesi' %}">Firmalar</a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'firma_listesi' %}active{% endif %}" href="{% url 'firma_listesi' %}">
+            <i class="bi bi-building"></i> {% trans "Firmalar" %}
+        </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link {% if request.resolver_match.url_name == 'senet_takip' %}active{% endif %}" href="{% url 'senet_takip' %}">Senet Takip</a>
+        <a class="nav-link {% if request.resolver_match.url_name == 'senet_takip' %}active{% endif %}" href="{% url 'senet_takip' %}">
+            <i class="bi bi-bank"></i> {% trans "Senet Takip" %}
+        </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="/admin/">Admin Panel</a>
+        <a class="nav-link" href="/admin/">
+            <i class="bi bi-gear"></i> {% trans "Admin Panel" %}
+        </a>
     </li>
 </ul>

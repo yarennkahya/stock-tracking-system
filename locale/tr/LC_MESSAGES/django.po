@@ -1,0 +1,90 @@
+# Turkish translations
+msgid ""
+msgstr ""
+"Project-Id-Version: Stock Tracking System\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-17 11:30+0000\n"
+"PO-Revision-Date: 2026-08-17 11:30+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: tr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: templates/ana_sayfa.html:4 templates/partials/sidebar_nav.html:5
+msgid "Ürünler"
+msgstr "Ürünler"
+
+#: templates/ana_sayfa.html:10
+msgid "Ürün Listesi"
+msgstr "Ürün Listesi"
+
+#: templates/ana_sayfa.html:11
+msgid "Stoktaki tüm ürünleri görüntüle ve yönet"
+msgstr "Stoktaki tüm ürünleri görüntüle ve yönet"
+
+#: templates/ana_sayfa.html:18
+msgid "Ürün Adı"
+msgstr "Ürün Adı"
+
+#: templates/ana_sayfa.html:19
+msgid "Kategori"
+msgstr "Kategori"
+
+#: templates/ana_sayfa.html:20
+msgid "Satış Fiyatı"
+msgstr "Satış Fiyatı"
+
+#: templates/ana_sayfa.html:21
+msgid "Stok"
+msgstr "Stok"
+
+#: templates/ana_sayfa.html:33
+msgid "Kritik!"
+msgstr "Kritik!"
+
+#: templates/ana_sayfa.html:39
+msgid "Detay"
+msgstr "Detay"
+
+#: templates/ana_sayfa.html:44
+msgid "Henüz ürün eklenmemiş."
+msgstr "Henüz ürün eklenmemiş."
+
+#: templates/partials/account_menu.html:12
+msgid "Tema"
+msgstr "Tema"
+
+#: templates/partials/account_menu.html:15
+msgid "Açık"
+msgstr "Açık"
+
+#: templates/partials/account_menu.html:18
+msgid "Koyu"
+msgstr "Koyu"
+
+#: templates/partials/account_menu.html:26
+msgid "Çıkış Yap"
+msgstr "Çıkış Yap"
+
+#: templates/partials/sidebar_nav.html:10
+msgid "Satış Ekranı"
+msgstr "Satış Ekranı"
+
+#: templates/partials/sidebar_nav.html:15
+msgid "Barkod Tara"
+msgstr "Barkod Tara"
+
+#: templates/partials/sidebar_nav.html:20
+msgid "Firmalar"
+msgstr "Firmalar"
+
+#: templates/partials/sidebar_nav.html:25
+msgid "Senet Takip"
+msgstr "Senet Takip"
+
+#: templates/partials/sidebar_nav.html:30
+msgid "Admin Panel"
+msgstr "Admin Panel"

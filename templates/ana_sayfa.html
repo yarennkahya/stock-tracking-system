@@ -1,8 +1,54 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
-{% block title %}Ana Sayfa{% endblock %}
+{% block title %}{% trans "Ürünler" %}{% endblock %}
 
 {% block content %}
-    <h1>Hoş Geldin! 🎉</h1>
-    <p>Bootstrap ve template sistemi çalışıyor.</p>
+   <div class="page-header">
+    <div class="d-flex" style="gap: var(--space-4);">
+        <div class="page-header-icon"><i class="bi bi-box-seam"></i></div>
+        <div>
+            <h1>{% trans "Ürün Listesi" %}</h1>
+            <p class="page-header-sub">{% trans "Stoktaki tüm ürünleri görüntüle ve yönet" %}</p>
+        </div>
+    </div>
+    <a href="{% url 'urun_ekle' %}" class="btn btn-primary ms-auto">
+        <i class="bi bi-plus-lg"></i> {% trans "Yeni Ürün" %}
+    </a>
+</div>
+
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>{% trans "Ürün Adı" %}</th>
+                <th>{% trans "Kategori" %}</th>
+                <th>{% trans "Satış Fiyatı" %}</th>
+                <th>{% trans "Stok" %}</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for urun in urunler %}
+            <tr>
+                <td>{{ urun.ad }}</td>
+                <td>{{ urun.kategori }}</td>
+                <td>{{ urun.satis_fiyati }} ₺</td>
+                <td>
+                    {% if urun.stok_miktari <= urun.kritik_stok_seviyesi %}
+                        <span class="badge bg-danger">{{ urun.stok_miktari }} ({% trans "Kritik!" %})</span>
+                    {% else %}
+                        <span class="badge bg-success">{{ urun.stok_miktari }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="/urun/{{ urun.id }}/" class="btn btn-sm btn-outline-primary">{% trans "Detay" %}</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">{% trans "Henüz ürün eklenmemiş." %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 {% endblock %}
