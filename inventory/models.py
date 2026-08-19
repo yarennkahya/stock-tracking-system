@@ -3,9 +3,24 @@ from django.db import models
 class Kategori(models.Model):
     ad = models.CharField(max_length=100)
     aciklama = models.TextField(blank=True, null=True)
+    parent = models.ForeignKey(
+        'self', on_delete=models.CASCADE, related_name='alt_kategoriler', blank=True, null=True,
+    )
+
+    class Meta:
+        ordering = ('parent_id', 'ad')
+        constraints = [
+            models.UniqueConstraint(fields=('parent', 'ad'), name='benzersiz_kategori_adi'),
+        ]
+
+    @property
+    def tam_ad(self):
+        if self.parent_id:
+            return f'{self.parent.ad} / {self.ad}'
+        return self.ad
 
     def __str__(self):
-        return self.ad
+        return self.tam_ad
 
 
 class Urun(models.Model):

@@ -2,9 +2,26 @@ from django.contrib.auth.models import User
 from django.core import mail
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from datetime import date, timedelta
+
+from .models import Firma, Senet
 
 
 class HesapAkisiTestleri(TestCase):
+    def test_yaklasan_senet_yedi_gunluk_listede_gorunur(self):
+        user = User.objects.create_user('deneme_kullanici', 'deneme@example.com', 'GucluSifre123!')
+        firma = Firma.objects.create(ad='Demo Firma')
+        senet = Senet.objects.create(
+            firma=firma, tip='alacak', tutar='5000.00', vade_tarihi=date.today() + timedelta(days=3),
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('senet_takip'))
+
+        self.assertContains(response, 'Yaklaşan Vadeler')
+        self.assertContains(response, firma.ad)
+        self.assertContains(response, '5000,00')
+
     def test_giris_yapan_kullanici_hesap_ozetini_gorur(self):
         user = User.objects.create_user(
             'deneme_kullanici',
@@ -22,6 +39,7 @@ class HesapAkisiTestleri(TestCase):
         self.assertContains(response, reverse('hesap_ayarlari'))
         self.assertContains(response, 'class="theme-toggle" data-theme-toggle', count=2)
         self.assertNotContains(response, 'themeToggleBtn')
+        self.assertNotContains(response, 'href="/admin/"')
 
     def test_hesap_ayarlari_bilgileri_gunceller(self):
         user = User.objects.create_user('eski_kullanici', 'eski@example.com', 'GucluSifre123!')

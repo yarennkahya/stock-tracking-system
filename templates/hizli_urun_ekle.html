@@ -42,9 +42,16 @@
             <input type="text" id="formBarkod" class="form-control" autocomplete="off">
         </div>
         <div class="mb-3">
-            <label class="form-label" for="formKategori">Kategori</label>
-            <select id="formKategori" class="form-select">
-                {% for k in kategoriler %}<option value="{{ k.id }}">{{ k.ad }}</option>{% empty %}<option value="">Önce bir kategori ekleyin</option>{% endfor %}
+            <label class="form-label" for="formAnaKategori">Ana kategori</label>
+            <select id="formAnaKategori" class="form-select">
+                <option value="">Ana kategori seçin</option>
+                {% for kategori in ana_kategoriler %}<option value="{{ kategori.id }}">{{ kategori.ad }}</option>{% empty %}<option value="">Önce kategori ekleyin</option>{% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="formKategori">Alt kategori</label>
+            <select id="formKategori" class="form-select" disabled>
+                <option value="">Önce ana kategori seçin</option>
             </select>
         </div>
         <div class="mb-3">
@@ -52,8 +59,8 @@
             <input type="text" id="formAd" class="form-control" placeholder="Örn. 50 mm PVC dirsek">
         </div>
         <div class="row">
-            <div class="col-md-4 mb-3"><label class="form-label" for="formAlisFiyati">Alış fiyatı</label><input type="number" step="0.01" min="0" id="formAlisFiyati" class="form-control" value="0"></div>
-            <div class="col-md-4 mb-3"><label class="form-label" for="formSatisFiyati">Satış fiyatı</label><input type="number" step="0.01" min="0" id="formSatisFiyati" class="form-control" value="0"></div>
+            <div class="col-md-4 mb-3"><label class="form-label" for="formAlisFiyati">Alış fiyatı</label><input type="number" step="1" min="0" id="formAlisFiyati" class="form-control" value="0"></div>
+            <div class="col-md-4 mb-3"><label class="form-label" for="formSatisFiyati">Satış fiyatı</label><input type="number" step="1" min="0" id="formSatisFiyati" class="form-control" value="0"></div>
             <div class="col-md-4 mb-3"><label class="form-label" for="formStokMiktari">İlk stok miktarı</label><input type="number" min="0" id="formStokMiktari" class="form-control" value="1"></div>
         </div>
         <div id="formHata" class="alert alert-danger d-none"></div>
@@ -78,6 +85,7 @@ const mevcutMetin = document.getElementById('mevcutMetin');
 const stokArtirBtn = document.getElementById('stokArtirBtn');
 const yeniUrunKart = document.getElementById('yeniUrunKart');
 const formBarkod = document.getElementById('formBarkod');
+const formAnaKategori = document.getElementById('formAnaKategori');
 const formKategori = document.getElementById('formKategori');
 const formAd = document.getElementById('formAd');
 const formAlisFiyati = document.getElementById('formAlisFiyati');
@@ -85,6 +93,30 @@ const formSatisFiyati = document.getElementById('formSatisFiyati');
 const formStokMiktari = document.getElementById('formStokMiktari');
 const formHata = document.getElementById('formHata');
 let mevcutUrunId = null, eklenenSayisi = 0, barkodBekleme, barkodIsleniyor = false;
+
+function altKategorileriYukle(anaKategoriId) {
+    formKategori.replaceChildren();
+    if (!anaKategoriId) {
+        formKategori.disabled = true;
+        formKategori.append(new Option('Önce ana kategori seçin', ''));
+        return;
+    }
+    formKategori.disabled = true;
+    formKategori.append(new Option('Alt kategoriler yükleniyor…', ''));
+    fetch(`/api/kategoriler/${anaKategoriId}/alt-kategoriler/`)
+        .then(response => response.json())
+        .then(data => {
+            formKategori.replaceChildren();
+            formKategori.append(new Option('Alt kategori seçin', ''));
+            data.alt_kategoriler.forEach(kategori => formKategori.append(new Option(kategori.ad, kategori.id)));
+            formKategori.disabled = data.alt_kategoriler.length === 0;
+            if (!data.alt_kategoriler.length) formKategori.options[0].text = 'Bu ana kategoride alt kategori yok';
+        })
+        .catch(() => {
+            formKategori.replaceChildren(new Option('Alt kategoriler yüklenemedi', ''));
+            formKategori.disabled = true;
+        });
+}
 
 function panelleriGizle() {
     mevcutUyari.classList.add('d-none'); mevcutUyari.classList.remove('d-flex');
@@ -124,7 +156,7 @@ function eklenenListeyeEkle(ad, barkod, stok) {
     document.getElementById('eklenenTbody').prepend(satir); document.getElementById('eklenenSayac').innerText = ++eklenenSayisi;
 }
 function urunKaydet() {
-    if (!formAd.value.trim() || !formKategori.value) { formHata.innerText = 'Ürün adı ve kategori zorunludur.'; formHata.classList.remove('d-none'); return; }
+    if (!formAd.value.trim() || !formKategori.value) { formHata.innerText = 'Ürün adı ve alt kategori zorunludur.'; formHata.classList.remove('d-none'); return; }
     const veriler = new URLSearchParams({barkod_no: formBarkod.value.trim(), ad: formAd.value.trim(), kategori_id: formKategori.value, alis_fiyati: formAlisFiyati.value || 0, satis_fiyati: formSatisFiyati.value || 0, stok_miktari: formStokMiktari.value || 0});
     fetch('{% url "hizli_urun_kaydet" %}', {method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/x-www-form-urlencoded'}, body: veriler.toString()})
       .then(res => res.json().then(data => ({ok: res.ok, data}))).then(({ok, data}) => {
@@ -133,6 +165,7 @@ function urunKaydet() {
       }).catch(error => { formHata.innerText = error.message; formHata.classList.remove('d-none'); });
 }
 barkodSekmesi.addEventListener('click', () => sekmeSec('barkod')); manuelSekmesi.addEventListener('click', () => sekmeSec('manuel'));
+formAnaKategori.addEventListener('change', () => altKategorileriYukle(formAnaKategori.value));
 document.getElementById('formuKapatBtn').addEventListener('click', () => sekmeSec('barkod')); document.getElementById('urunKaydetBtn').addEventListener('click', urunKaydet);
 </script>
 {% endblock %}

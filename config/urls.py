@@ -74,9 +74,11 @@ urlpatterns = [
     path('satis/<int:satis_id>/', sales_views.satis_detay, name='satis_detay'),
     path('firmalar/', accounts_views.firma_listesi, name='firma_listesi'),
     path('urun/ekle/', views.urun_ekle, name='urun_ekle'),
+    path('kategoriler/', views.kategori_listesi, name='kategori_listesi'),
     path('senet-takip/', accounts_views.senet_takip, name='senet_takip'),
     path('urun/hizli-ekle/', views.hizli_urun_ekle, name='hizli_urun_ekle'),
 path('api/urun-kontrol/<str:barkod_no>/', views.barkod_kontrol, name='barkod_kontrol'),
 path('api/stok-artir/<int:urun_id>/', views.hizli_stok_ekle, name='hizli_stok_ekle'),
 path('api/urun-hizli-kaydet/', views.hizli_urun_kaydet, name='hizli_urun_kaydet'),
+path('api/kategoriler/<int:ana_kategori_id>/alt-kategoriler/', views.alt_kategoriler, name='alt_kategoriler'),
     ]

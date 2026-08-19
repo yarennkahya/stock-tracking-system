@@ -11,6 +11,11 @@
     </a>
 </li>
     <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'kategori_listesi' %}active{% endif %}" href="{% url 'kategori_listesi' %}">
+            <i class="bi bi-diagram-3"></i> Kategoriler
+        </a>
+    </li>
+    <li class="nav-item">
         <a class="nav-link {% if request.resolver_match.url_name == 'satis_ekrani' %}active{% endif %}" href="{% url 'satis_ekrani' %}">
             <i class="bi bi-cash-coin"></i> {% trans "Satış Ekranı" %}
         </a>
@@ -28,11 +33,6 @@
     <li class="nav-item">
         <a class="nav-link {% if request.resolver_match.url_name == 'senet_takip' %}active{% endif %}" href="{% url 'senet_takip' %}">
             <i class="bi bi-bank"></i> {% trans "Senet Takip" %}
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" href="/admin/">
-            <i class="bi bi-gear"></i> {% trans "Admin Panel" %}
         </a>
     </li>
 </ul>

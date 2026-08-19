@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Kategoriler{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex" style="gap: var(--space-4);">
+        <div class="page-header-icon"><i class="bi bi-diagram-3"></i></div>
+        <div>
+            <h1>Kategoriler</h1>
+            <p class="page-header-sub">Ana kategori ve alt kategorileri ürün gruplarınıza göre düzenleyin</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Kategori ekle</h2>
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ form.ad.id_for_label }}">{{ form.ad.label }}</label>
+                        {{ form.ad }}
+                        {% for error in form.ad.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ form.parent.id_for_label }}">{{ form.parent.label }}</label>
+                        {{ form.parent }}
+                        <div class="form-text">Boş bırakırsanız ana kategori; seçerseniz o kategorinin alt kategorisi olur.</div>
+                        {% for error in form.parent.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label" for="{{ form.aciklama.id_for_label }}">{{ form.aciklama.label }}</label>
+                        {{ form.aciklama }}
+                    </div>
+                    <button class="btn btn-primary w-100" type="submit"><i class="bi bi-plus-lg"></i> Kategoriyi kaydet</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Kategori ağacı</h2>
+                {% if ana_kategoriler %}
+                    <div class="list-group list-group-flush">
+                    {% for ana_kategori in ana_kategoriler %}
+                        <div class="list-group-item px-0">
+                            <div class="fw-semibold"><i class="bi bi-folder2-open me-2 text-warning"></i>{{ ana_kategori.ad }}</div>
+                            {% if ana_kategori.aciklama %}<div class="small text-secondary mt-1 ms-4">{{ ana_kategori.aciklama }}</div>{% endif %}
+                            {% if ana_kategori.alt_kategoriler.all %}
+                                <ul class="list-unstyled ms-4 mt-2 mb-0">
+                                {% for alt_kategori in ana_kategori.alt_kategoriler.all %}
+                                    <li class="py-1"><i class="bi bi-folder me-2 text-secondary"></i>{{ alt_kategori.ad }}</li>
+                                {% endfor %}
+                                </ul>
+                            {% else %}
+                                <div class="small text-secondary ms-4 mt-2">Henüz alt kategori yok.</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-secondary mb-0">Henüz kategori eklenmedi.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
