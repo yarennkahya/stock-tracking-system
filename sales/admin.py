@@ -9,5 +9,6 @@ class SatisKalemiInline(admin.TabularInline):
 
 @admin.register(Satis)
 class SatisAdmin(admin.ModelAdmin):
-    list_display = ('id', 'satisi_yapan', 'toplam_tutar', 'tarih')
+    list_display = ('id', 'satisi_yapan', 'toplam_tutar', 'odeme_yontemi', 'pos_islem_no', 'tarih')
+    list_filter = ('odeme_yontemi',)
     inlines = [SatisKalemiInline]

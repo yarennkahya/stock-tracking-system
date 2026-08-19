@@ -18,6 +18,13 @@
     .quantity-controls { display: inline-flex; align-items: center; gap: .3rem; }
     .quantity-controls button { width: 30px; height: 30px; padding: 0; }
     .cart-total { border-top: 2px solid var(--color-accent); margin-top: 1rem; padding-top: 1rem; }
+    .payment-options { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+    .payment-options .btn { min-height: 58px; }
+    .demo-pos-status { border: 1px dashed var(--color-accent); background: var(--color-accent-soft); border-radius: var(--radius-md); padding: .85rem 1rem; }
+    .demo-pos-terminal { width: 84px; height: 112px; border-radius: 12px; background: #27323C; color: #F7F9FA; padding: .7rem; margin: 0 auto 1rem; box-shadow: 0 8px 16px rgba(0,0,0,.25); }
+    .demo-pos-terminal-screen { background: #A9D6B0; color: #173A20; border-radius: 4px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 700; text-align: center; }
+    .demo-pos-terminal-key { display: flex; justify-content: center; gap: .25rem; margin-top: .6rem; }
+    .demo-pos-terminal-key span { width: 10px; height: 10px; border-radius: 50%; background: #E8E9EA; }
     [data-theme="dark"] .sale-result, [data-theme="dark"] .cart-line { border-color: #34383E; }
     @media (max-width: 991.98px) { .cart-card { position: static; } }
 </style>
@@ -67,10 +74,43 @@
                     <span class="fw-semibold">Toplam</span>
                     <strong id="sepetToplam" class="fs-4">0,00 ₺</strong>
                 </div>
-                <form method="post" action="{% url 'satisi_tamamla' %}" class="mt-3">
+                <div id="odemeHatasi" class="alert alert-danger mt-3 mb-0 d-none" role="alert"></div>
+                <form id="odemeFormu" method="post" action="{% url 'satisi_tamamla' %}" class="mt-3">
                     {% csrf_token %}
-                    <button id="satisTamamlaBtn" type="submit" class="btn btn-primary btn-lg w-100" disabled><i class="bi bi-check2-circle"></i> Satışı tamamla</button>
+                    <input type="hidden" name="odeme_yontemi" id="odemeYontemi">
+                    <input type="hidden" name="pos_onay" id="posOnay" value="0">
+                    <input type="hidden" name="pos_islem_no" id="posIslemNo">
+                    <div class="payment-options">
+                        <button id="nakitOdeBtn" type="button" class="btn btn-success" disabled><i class="bi bi-cash-stack"></i> Nakit ile tamamla</button>
+                        <button id="kartPosOdeBtn" type="button" class="btn btn-primary" disabled><i class="bi bi-credit-card-2-front"></i> Kart / POS ile öde</button>
+                    </div>
+                    <div class="form-text text-center mt-2"><i class="bi bi-info-circle"></i> Kart akışı Demo POS simülasyonudur; gerçek tahsilat yapılmaz.</div>
                 </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="demoPosModal" tabindex="-1" aria-labelledby="demoPosModalBaslik" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="demoPosModalBaslik"><i class="bi bi-credit-card-2-front"></i> Demo POS Terminali</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="demo-pos-terminal" aria-hidden="true">
+                    <div class="demo-pos-terminal-screen" id="posTerminalEkran">Bağlanıyor…</div>
+                    <div class="demo-pos-terminal-key"><span></span><span></span><span></span></div>
+                </div>
+                <p class="mb-1 fw-semibold" id="posDurumMetni">POS terminaline bağlanılıyor.</p>
+                <p class="text-secondary small mb-3">Tahsil edilecek tutar: <strong id="posToplam">0,00 ₺</strong></p>
+                <div class="demo-pos-status small text-start"><i class="bi bi-shield-check"></i> Demo mod: Kart bilgisi alınmaz ve bankaya gerçek istek gönderilmez.</div>
+            </div>
+            <div class="modal-footer justify-content-center" id="posModalButonlari">
+                <button type="button" id="posIptalBtn" class="btn btn-outline-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                <button type="button" id="posReddetBtn" class="btn btn-outline-danger d-none">Ödemeyi Reddet</button>
+                <button type="button" id="posOnaylaBtn" class="btn btn-success d-none"><i class="bi bi-check-lg"></i> POS Ödemesini Onayla</button>
             </div>
         </div>
     </div>
@@ -86,7 +126,20 @@ const sepetSatirlari = document.getElementById('sepetSatirlari');
 const sepetBos = document.getElementById('sepetBos');
 const sepetAdet = document.getElementById('sepetAdet');
 const sepetToplam = document.getElementById('sepetToplam');
-const satisTamamlaBtn = document.getElementById('satisTamamlaBtn');
+const odemeHatasi = document.getElementById('odemeHatasi');
+const odemeFormu = document.getElementById('odemeFormu');
+const odemeYontemi = document.getElementById('odemeYontemi');
+const posOnay = document.getElementById('posOnay');
+const posIslemNo = document.getElementById('posIslemNo');
+const nakitOdeBtn = document.getElementById('nakitOdeBtn');
+const kartPosOdeBtn = document.getElementById('kartPosOdeBtn');
+const demoPosModal = new bootstrap.Modal(document.getElementById('demoPosModal'));
+const posDurumMetni = document.getElementById('posDurumMetni');
+const posTerminalEkran = document.getElementById('posTerminalEkran');
+const posToplam = document.getElementById('posToplam');
+const posIptalBtn = document.getElementById('posIptalBtn');
+const posOnaylaBtn = document.getElementById('posOnaylaBtn');
+const posReddetBtn = document.getElementById('posReddetBtn');
 const csrfToken = '{{ csrf_token }}';
 const urunAraUrl = '{% url "urun_ara" %}';
 const barkodEkleUrl = '{% url "sepete_barkod_ekle" %}';
@@ -102,10 +155,13 @@ function hataGoster(mesaj) {
     aramaHatasi.textContent = mesaj; aramaHatasi.classList.remove('d-none');
 }
 function hataGizle() { aramaHatasi.classList.add('d-none'); }
+function odemeHatasiGoster(mesaj) { odemeHatasi.textContent = mesaj; odemeHatasi.classList.remove('d-none'); }
+function odemeHatasiGizle() { odemeHatasi.classList.add('d-none'); }
 function sepetiCiz() {
     sepetSatirlari.replaceChildren();
     sepetBos.classList.toggle('d-none', sepet.kalemler.length > 0);
-    satisTamamlaBtn.disabled = sepet.kalemler.length === 0;
+    nakitOdeBtn.disabled = sepet.kalemler.length === 0;
+    kartPosOdeBtn.disabled = sepet.kalemler.length === 0;
     sepetAdet.textContent = `${sepet.toplam_adet} ürün`;
     sepetToplam.textContent = paraYaz(sepet.toplam);
     sepet.kalemler.forEach(kalem => {
@@ -181,6 +237,39 @@ sepetSatirlari.addEventListener('click', async event => {
     const dugme = event.target.closest('[data-sepet-islem]'); if (!dugme) return;
     try { const data = await istekYap(sepetGuncelleUrl.replace('{urunId}', dugme.dataset.urunId), {islem: dugme.dataset.sepetIslem}); sepet = data.sepet; sepetiCiz(); hataGizle(); }
     catch (error) { hataGoster(error.message); }
+});
+nakitOdeBtn.addEventListener('click', () => {
+    odemeYontemi.value = 'nakit'; posOnay.value = '0'; posIslemNo.value = ''; odemeFormu.submit();
+});
+kartPosOdeBtn.addEventListener('click', () => {
+    odemeHatasiGizle();
+    posOnay.value = '0'; posIslemNo.value = '';
+    posToplam.textContent = paraYaz(sepet.toplam);
+    posTerminalEkran.textContent = 'Bağlanıyor…';
+    posDurumMetni.textContent = 'POS terminaline bağlanılıyor.';
+    posIptalBtn.classList.remove('d-none'); posOnaylaBtn.classList.add('d-none'); posReddetBtn.classList.add('d-none');
+    demoPosModal.show();
+    window.setTimeout(() => {
+        posTerminalEkran.textContent = 'KARTI OKUTUN';
+        posDurumMetni.textContent = 'Kartı okutun veya temassız ödeme simülasyonu için işlem seçin.';
+        posOnaylaBtn.classList.remove('d-none'); posReddetBtn.classList.remove('d-none');
+    }, 700);
+});
+posOnaylaBtn.addEventListener('click', () => {
+    posOnaylaBtn.disabled = true; posReddetBtn.disabled = true; posIptalBtn.disabled = true;
+    posTerminalEkran.textContent = 'ONAYLANIYOR'; posDurumMetni.textContent = 'Demo POS ödeme onayı alınıyor.';
+    window.setTimeout(() => {
+        odemeYontemi.value = 'kart'; posOnay.value = '1';
+        posIslemNo.value = `DEMO-POS-${Date.now()}-${Math.floor(Math.random() * 9000 + 1000)}`;
+        odemeFormu.submit();
+    }, 650);
+});
+posReddetBtn.addEventListener('click', () => {
+    demoPosModal.hide();
+    odemeHatasiGoster('Demo POS işlemi reddedildi. Sepetiniz korunuyor; nakit veya kart ile tekrar deneyebilirsiniz.');
+});
+document.getElementById('demoPosModal').addEventListener('hidden.bs.modal', () => {
+    posOnaylaBtn.disabled = false; posReddetBtn.disabled = false; posIptalBtn.disabled = false;
 });
 sepetiCiz();
 </script>

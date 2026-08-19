@@ -156,6 +156,18 @@ def satisi_tamamla(request):
     if not sepet:
         return redirect('satis_ekrani')
 
+    odeme_yontemi = request.POST.get('odeme_yontemi', 'nakit')
+    if odeme_yontemi not in dict(Satis.ODEME_YONTEMLERI):
+        messages.error(request, 'Geçerli bir ödeme yöntemi seçin.')
+        return redirect('satis_ekrani')
+
+    pos_islem_no = ''
+    if odeme_yontemi == 'kart':
+        pos_islem_no = request.POST.get('pos_islem_no', '').strip()
+        if request.POST.get('pos_onay') != '1' or not pos_islem_no.startswith('DEMO-POS-'):
+            messages.error(request, 'Demo POS ödeme onayı alınamadı. Sepetiniz korunuyor.')
+            return redirect('satis_ekrani')
+
     with transaction.atomic():
         urunler = {}
         for urun_id, kalem in sepet.items():
@@ -165,7 +177,12 @@ def satisi_tamamla(request):
                 return redirect('satis_ekrani')
             urunler[urun_id] = urun
 
-        satis = Satis.objects.create(satisi_yapan=request.user, toplam_tutar=Decimal('0'))
+        satis = Satis.objects.create(
+            satisi_yapan=request.user,
+            toplam_tutar=Decimal('0'),
+            odeme_yontemi=odeme_yontemi,
+            pos_islem_no=pos_islem_no,
+        )
         toplam = Decimal('0')
         for urun_id, kalem in sepet.items():
             urun = urunler[urun_id]
