@@ -66,6 +66,7 @@ urlpatterns = [
     path('i18n/', include('django.conf.urls.i18n')),
 
     path('satis/', sales_views.satis_ekrani, name='satis_ekrani'),
+    path('satislar/', sales_views.satis_raporu, name='satis_raporu'),
     path('satis/urun-ara/', sales_views.urun_ara, name='urun_ara'),
     path('satis/barkod-ekle/', sales_views.sepete_barkod_ekle, name='sepete_barkod_ekle'),
     path('satis/sepete-ekle/<int:urun_id>/', sales_views.sepete_urun_ekle, name='sepete_urun_ekle'),

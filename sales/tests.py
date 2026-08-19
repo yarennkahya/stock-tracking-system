@@ -1,8 +1,10 @@
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from inventory.models import Barkod, Kategori, StokHareketi, Urun
 from .models import Satis
@@ -18,6 +20,16 @@ class SatisAkisiTestleri(TestCase):
             satis_fiyati='1250.00', stok_miktari=2,
         )
         Barkod.objects.create(urun=self.urun, barkod_no='8691234567890')
+
+    def rapor_satisi_olustur(self, tutar, satis_tarihi, odeme_yontemi='nakit'):
+        satis = Satis.objects.create(
+            satisi_yapan=self.user,
+            toplam_tutar=tutar,
+            odeme_yontemi=odeme_yontemi,
+        )
+        tarih = timezone.make_aware(datetime.combine(satis_tarihi, datetime.min.time()).replace(hour=12))
+        Satis.objects.filter(pk=satis.pk).update(tarih=tarih)
+        return satis
 
     def test_urun_adi_yazdikca_aranabilir(self):
         sayfa = self.client.get(reverse('satis_ekrani'))
@@ -85,3 +97,27 @@ class SatisAkisiTestleri(TestCase):
         self.urun.refresh_from_db()
         self.assertEqual(self.urun.stok_miktari, 2)
         self.assertIn(str(self.urun.id), self.client.session['sepet'])
+
+    def test_satis_raporu_gunluk_ve_ozel_tarih_filtrelerini_uygular(self):
+        bugun = timezone.localdate()
+        bugunku_satis = self.rapor_satisi_olustur('450.00', bugun, 'kart')
+        eski_satis = self.rapor_satisi_olustur('275.00', bugun - timedelta(days=2))
+
+        gunluk = self.client.get(reverse('satis_raporu'), {'donem': 'gun'})
+        ozel = self.client.get(
+            reverse('satis_raporu'),
+            {
+                'donem': 'ozel',
+                'baslangic': (bugun - timedelta(days=2)).isoformat(),
+                'bitis': bugun.isoformat(),
+            },
+        )
+
+        self.assertEqual(gunluk.status_code, 200)
+        self.assertEqual(gunluk.context['ciro'], Decimal('450.00'))
+        self.assertEqual(gunluk.context['kart_toplami'], Decimal('450.00'))
+        self.assertContains(gunluk, f'<td class="fw-semibold">#{bugunku_satis.id}</td>', html=True)
+        self.assertNotContains(gunluk, f'<td class="fw-semibold">#{eski_satis.id}</td>', html=True)
+        self.assertEqual(ozel.context['ciro'], Decimal('725.00'))
+        self.assertEqual(ozel.context['satis_adedi'], 2)
+        self.assertContains(ozel, 'Günlük ciro')

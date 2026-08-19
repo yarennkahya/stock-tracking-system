@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Stock Tracking System{% endblock %}</title>
+    <title>{% block title %}Tesisat{% endblock %}</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,6 +20,10 @@
             --color-accent-soft: #FBE7CD;
             --color-ok: #2E6B3E;
             --color-critical: #A32F22;
+            --color-brand-deep: #082C47;
+            --color-brand-mid: #0B4F75;
+            --color-brand-bright: #1681A8;
+            --color-brand-gold: #F3A41A;
             --font-body: 'Inter', system-ui, -apple-system, sans-serif;
             --space-2: 8px;
             --space-3: 12px;
@@ -46,6 +50,7 @@
             --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
             --shadow-md: 0 4px 14px rgba(0,0,0,.45), 0 1px 3px rgba(0,0,0,.3);
             --shadow-lg: 0 20px 40px rgba(0,0,0,.55), 0 2px 10px rgba(0,0,0,.35);
+            color-scheme: dark;
         }
         [data-theme="dark"] .card,
         [data-theme="dark"] .sidebar,
@@ -58,11 +63,77 @@
         }
         [data-theme="dark"] .dropdown-menu { background: var(--color-surface); }
         [data-theme="dark"] .account-menu .dropdown-divider { border-color: #34383E; }
+        [data-theme="dark"] .card,
+        [data-theme="dark"] .modal-content,
+        [data-theme="dark"] .dropdown-menu,
+        [data-theme="dark"] .list-group,
+        [data-theme="dark"] .list-group-item {
+            background-color: var(--color-surface);
+            color: var(--color-ink);
+        }
+        [data-theme="dark"] .modal-header,
+        [data-theme="dark"] .modal-footer,
+        [data-theme="dark"] .list-group-item,
+        [data-theme="dark"] .border-bottom,
+        [data-theme="dark"] .border-top {
+            border-color: #34383E !important;
+        }
+        [data-theme="dark"] .table {
+            --bs-table-color: var(--color-ink);
+            --bs-table-bg: transparent;
+            --bs-table-border-color: #34383E;
+            --bs-table-striped-color: var(--color-ink);
+            --bs-table-striped-bg: rgba(255,255,255,.035);
+            --bs-table-hover-color: #FFFFFF;
+            --bs-table-hover-bg: rgba(22,129,168,.18);
+            color: var(--color-ink);
+        }
+        [data-theme="dark"] .table thead th { border-color: #34383E; }
+        [data-theme="dark"] .table-danger {
+            --bs-table-color: #FFD8D3;
+            --bs-table-bg: #4A2729;
+            --bs-table-border-color: #64383B;
+        }
+        [data-theme="dark"] .table-warning {
+            --bs-table-color: #FFE6A6;
+            --bs-table-bg: #4A3A1F;
+            --bs-table-border-color: #67522A;
+        }
+        [data-theme="dark"] .form-control,
+        [data-theme="dark"] .form-select,
+        [data-theme="dark"] .input-group-text {
+            background-color: #191D21;
+            color: var(--color-ink);
+            border-color: #414850;
+        }
+        [data-theme="dark"] .form-control::placeholder { color: #919AA5; }
+        [data-theme="dark"] .form-control:focus,
+        [data-theme="dark"] .form-select:focus {
+            background-color: #191D21;
+            color: var(--color-ink);
+            border-color: var(--color-brand-bright);
+            box-shadow: 0 0 0 .2rem rgba(22,129,168,.2);
+        }
+        [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+        [data-theme="dark"] .pagination {
+            --bs-pagination-bg: var(--color-surface);
+            --bs-pagination-color: var(--color-ink);
+            --bs-pagination-border-color: #414850;
+            --bs-pagination-hover-bg: #303840;
+            --bs-pagination-hover-color: #FFFFFF;
+            --bs-pagination-hover-border-color: #53606C;
+            --bs-pagination-disabled-bg: #242A30;
+            --bs-pagination-disabled-color: #7E8994;
+            --bs-pagination-disabled-border-color: #34383E;
+        }
+        [data-theme="dark"] .btn-close { filter: invert(1) grayscale(1) brightness(2); }
 
         html { font-size: 18px; }
 
         body {
-            background: var(--color-bg);
+            background:
+                radial-gradient(circle at 100% 0, rgba(22,129,168,.09), transparent 25rem),
+                var(--color-bg);
             color: var(--color-ink);
             font-family: var(--font-body);
             line-height: 1.6;
@@ -88,38 +159,61 @@
         .sidebar {
             width: 250px;
             flex-shrink: 0;
-            background: var(--color-surface);
-            border-right: 3px solid var(--color-accent);
+            background: linear-gradient(165deg, var(--color-brand-deep) 0%, var(--color-brand-mid) 60%, #07324F 100%);
+            border-right: 0;
             padding: 1.5rem 1.25rem;
             position: sticky;
             top: 0;
             height: 100vh;
             overflow-y: auto;
-            box-shadow: var(--shadow-sm);
+            box-shadow: 6px 0 24px rgba(8,44,71,.16);
         }
 
-        .sidebar-brand {
-            font-weight: 700;
-            font-size: 1.25rem;
-            color: var(--color-ink) !important;
+        .brand-lockup {
+            display: flex;
+            align-items: center;
+            gap: .7rem;
+            color: #FFFFFF !important;
             text-decoration: none;
-            display: block;
             margin-bottom: 2rem;
         }
+        .brand-monogram {
+            width: 43px;
+            height: 43px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--color-brand-gold), #F9C65B);
+            color: var(--color-brand-deep);
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: -.08em;
+            box-shadow: 0 6px 18px rgba(0,0,0,.22);
+        }
+        .brand-title { color: #FFFFFF; font-size: 1.07rem; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
+        .brand-subtitle { color: rgba(255,255,255,.64); font-size: .67rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
 
         .sidebar .nav-link {
             display: flex;
             align-items: center;
             gap: .65rem;
-            color: var(--color-steel);
+            color: rgba(255,255,255,.78);
             font-weight: 600;
             font-size: 1.02rem;
             padding: .65rem .9rem;
             border-radius: var(--radius-sm);
             margin-bottom: .2rem;
         }
-        .sidebar .nav-link:hover { background: var(--color-accent-soft); color: var(--color-accent); }
-        .sidebar .nav-link.active { background: var(--color-accent); color: #FFFFFF; }
+        .sidebar .nav-link:hover { background: rgba(255,255,255,.12); color: #FFFFFF; }
+        .sidebar .nav-link.active { background: var(--color-brand-gold); color: var(--color-brand-deep); box-shadow: 0 4px 12px rgba(0,0,0,.15); }
+        .sidebar .nav-link.active i { color: var(--color-brand-deep); }
+
+        .brand-offcanvas { background: linear-gradient(165deg, var(--color-brand-deep), var(--color-brand-mid)); color: #FFFFFF; }
+        .brand-offcanvas .offcanvas-header { border-bottom: 1px solid rgba(255,255,255,.15); }
+        .brand-offcanvas .nav-link { color: rgba(255,255,255,.78); font-weight: 600; padding: .65rem .9rem; border-radius: var(--radius-sm); margin-bottom: .2rem; }
+        .brand-offcanvas .nav-link:hover { background: rgba(255,255,255,.12); color: #FFFFFF; }
+        .brand-offcanvas .nav-link.active { background: var(--color-brand-gold); color: var(--color-brand-deep); }
 
         .main-content { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; }
 
@@ -129,7 +223,7 @@
             justify-content: space-between;
             padding: .85rem 1.5rem;
             border-bottom: 1px solid #E5E7E4;
-            background: var(--color-surface);
+            background: color-mix(in srgb, var(--color-surface) 94%, #E4F5FA);
             box-shadow: var(--shadow-sm);
             position: sticky;
             top: 0;
@@ -283,6 +377,8 @@
             box-shadow: var(--shadow-md);
         }
         [data-theme="dark"] .card { border-color: #34383E; }
+        [data-theme="dark"] body { background: var(--color-bg); }
+        [data-theme="dark"] .mobile-topbar, [data-theme="dark"] .desktop-topbar { background: var(--color-surface); }
 
         .card-body { padding: 1.75rem; }
         .dropdown-menu {
@@ -328,7 +424,10 @@
     <div class="app-shell">
 
         <aside class="sidebar d-flex flex-column">
-            <a href="{% url 'ana_sayfa' %}" class="sidebar-brand">Stock Tracking System</a>
+            <a href="{% url 'ana_sayfa' %}" class="brand-lockup" aria-label="YK Tesisat ana sayfa">
+                <span class="brand-monogram">YK</span>
+                <span><span class="brand-title d-block">YK Tesisat</span><span class="brand-subtitle d-block">Stok ve satış</span></span>
+            </a>
             {% if user.is_authenticated %}
                 {% include 'partials/sidebar_nav.html' %}
             {% endif %}
@@ -339,7 +438,10 @@
             <div class="mobile-topbar">
                 <div class="d-flex align-items-center gap-2">
                     <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar">☰</button>
-                    <span class="sidebar-brand mb-0" style="font-size: 1rem;">Stock Tracking System</span>
+                    <a href="{% url 'ana_sayfa' %}" class="d-flex align-items-center gap-2 text-decoration-none" aria-label="YK Tesisat ana sayfa">
+                        <span class="brand-monogram" style="width:34px;height:34px;border-radius:9px;font-size:.9rem;">YK</span>
+                        <span class="fw-bold" style="color:var(--color-brand-deep);">YK Tesisat</span>
+                    </a>
                 </div>
                 {% if user.is_authenticated %}
                     <div>
@@ -356,10 +458,13 @@
                 {% endif %}
             </div>
 
-            <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileSidebar">
+            <div class="offcanvas offcanvas-start brand-offcanvas" tabindex="-1" id="mobileSidebar">
                 <div class="offcanvas-header">
-                    <span class="sidebar-brand mb-0">Stock Tracking System</span>
-                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+                    <a href="{% url 'ana_sayfa' %}" class="brand-lockup mb-0">
+                        <span class="brand-monogram">YK</span>
+                        <span><span class="brand-title d-block">YK Tesisat</span><span class="brand-subtitle d-block">Stok ve satış</span></span>
+                    </a>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
                 </div>
                 <div class="offcanvas-body d-flex flex-column">
                     {% if user.is_authenticated %}

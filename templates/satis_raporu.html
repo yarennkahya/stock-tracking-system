@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block title %}Satışlar{% endblock %}
+
+{% block content %}
+<style>
+    .report-periods { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .report-periods .btn { padding: .5rem .85rem; }
+    .report-summary { border: 0; overflow: hidden; }
+    .report-summary .card-body { padding: 1.25rem; }
+    .report-summary-icon { width: 42px; height: 42px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+    .report-summary-value { color: var(--color-ink); font-size: 1.45rem; font-weight: 750; line-height: 1.2; margin-top: .75rem; }
+    .report-summary-label { color: var(--color-steel); font-size: .86rem; font-weight: 600; }
+    .report-chart { height: 260px; display: flex; align-items: end; gap: .55rem; overflow-x: auto; padding: 1rem .25rem .25rem; border-bottom: 1px solid #E5E7E4; }
+    .report-chart-column { min-width: 34px; flex: 1; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: end; gap: .45rem; }
+    .report-chart-value { color: var(--color-steel); font-size: .7rem; white-space: nowrap; transform: rotate(-40deg); margin-bottom: .35rem; }
+    .report-chart-bar { width: min(34px, 100%); min-height: 2px; border-radius: 6px 6px 0 0; background: linear-gradient(180deg, #26A0C9, #0B4D74); transition: height .2s ease; }
+    .report-chart-label { color: var(--color-steel); font-size: .7rem; white-space: nowrap; }
+    [data-theme="dark"] .report-chart { border-color: #34383E; }
+    @media (max-width: 575.98px) { .report-summary-value { font-size: 1.2rem; } }
+</style>
+
+<div class="page-header">
+    <div class="d-flex" style="gap: var(--space-4);">
+        <div class="page-header-icon"><i class="bi bi-graph-up-arrow"></i></div>
+        <div>
+            <h1>Satışlar</h1>
+            <p class="page-header-sub">Ciroyu, ödeme yöntemlerini ve satış geçmişini tek ekrandan takip edin</p>
+        </div>
+    </div>
+    <a class="btn btn-primary ms-auto" href="{% url 'satis_ekrani' %}"><i class="bi bi-cart-plus"></i> Yeni Satış</a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <div class="form-label mb-2">Hızlı dönem seçimi</div>
+                <div class="report-periods">
+                    <a class="btn {% if donem == 'gun' %}btn-primary{% else %}btn-outline-secondary{% endif %}" href="{% url 'satis_raporu' %}?donem=gun">Bugün</a>
+                    <a class="btn {% if donem == 'ay' %}btn-primary{% else %}btn-outline-secondary{% endif %}" href="{% url 'satis_raporu' %}?donem=ay">Bu ay</a>
+                    <a class="btn {% if donem == 'yil' %}btn-primary{% else %}btn-outline-secondary{% endif %}" href="{% url 'satis_raporu' %}?donem=yil">Bu yıl</a>
+                </div>
+            </div>
+            <form method="get" class="row g-2 align-items-end">
+                <input type="hidden" name="donem" value="ozel">
+                <div class="col-auto">
+                    <label class="form-label mb-1" for="baslangic">Başlangıç</label>
+                    <input class="form-control" type="date" id="baslangic" name="baslangic" value="{{ baslangic_degeri }}" required>
+                </div>
+                <div class="col-auto">
+                    <label class="form-label mb-1" for="bitis">Bitiş</label>
+                    <input class="form-control" type="date" id="bitis" name="bitis" value="{{ bitis_degeri }}" required>
+                </div>
+                <div class="col-auto"><button class="btn btn-outline-primary" type="submit"><i class="bi bi-funnel"></i> Uygula</button></div>
+            </form>
+        </div>
+        <div class="small text-secondary mt-3"><i class="bi bi-calendar3"></i> Gösterilen dönem: <strong>{{ baslangic|date:'d.m.Y' }} – {{ bitis|date:'d.m.Y' }}</strong></div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3">
+        <div class="card report-summary h-100">
+            <div class="card-body">
+                <span class="report-summary-icon" style="background:#E1F4FA;color:#0B7096;"><i class="bi bi-cash-coin"></i></span>
+                <div class="report-summary-value">{{ ciro }} ₺</div>
+                <div class="report-summary-label">Toplam ciro</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="card report-summary h-100">
+            <div class="card-body">
+                <span class="report-summary-icon" style="background:#FFF0D8;color:#B65B00;"><i class="bi bi-receipt"></i></span>
+                <div class="report-summary-value">{{ satis_adedi }}</div>
+                <div class="report-summary-label">Satış adedi</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="card report-summary h-100">
+            <div class="card-body">
+                <span class="report-summary-icon" style="background:#E6F5EA;color:#2E6B3E;"><i class="bi bi-basket"></i></span>
+                <div class="report-summary-value">{{ ortalama_sepet }} ₺</div>
+                <div class="report-summary-label">Ortalama sepet</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="card report-summary h-100">
+            <div class="card-body">
+                <span class="report-summary-icon" style="background:#EEE9FF;color:#5A46A3;"><i class="bi bi-credit-card"></i></span>
+                <div class="report-summary-value">{{ kart_toplami }} ₺</div>
+                <div class="report-summary-label">Kart / POS tahsilatı</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-7">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h2 class="h5 mb-0">{{ grafik_basligi }}</h2>
+                    <span class="small text-secondary">Nakit: {{ nakit_toplami }} ₺</span>
+                </div>
+                {% if ciro %}
+                <div class="report-chart" aria-label="{{ grafik_basligi }} grafiği">
+                    {% for nokta in grafik %}
+                    <div class="report-chart-column" title="{{ nokta.etiket }}: {{ nokta.toplam }} ₺">
+                        {% if nokta.toplam %}<span class="report-chart-value">{{ nokta.toplam }} ₺</span>{% endif %}
+                        <div class="report-chart-bar" style="height: {{ nokta.oran }}%;"></div>
+                        <span class="report-chart-label">{{ nokta.etiket }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center text-secondary py-5"><i class="bi bi-bar-chart fs-2"></i><p class="mb-0 mt-2">Seçilen dönemde satış yok.</p></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-5">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Ödeme dağılımı</h2>
+                <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                    <span><i class="bi bi-cash-stack text-success me-2"></i>Nakit</span><strong>{{ nakit_toplami }} ₺</strong>
+                </div>
+                <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                    <span><i class="bi bi-credit-card text-primary me-2"></i>Kart / Demo POS</span><strong>{{ kart_toplami }} ₺</strong>
+                </div>
+                <div class="d-flex justify-content-between align-items-center pt-3">
+                    <span class="fw-semibold">Dönem toplamı</span><strong class="fs-5">{{ ciro }} ₺</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-body p-0">
+        <div class="p-4 pb-2 d-flex justify-content-between align-items-center">
+            <h2 class="h5 mb-0">Satış geçmişi</h2>
+            <span class="badge text-bg-secondary">{{ satis_adedi }} kayıt</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead><tr><th>Satış no</th><th>Tarih</th><th>Kasiyer</th><th>Ödeme</th><th class="text-end">Tutar</th><th></th></tr></thead>
+                <tbody>
+                    {% for satis in satislar %}
+                    <tr>
+                        <td class="fw-semibold">#{{ satis.id }}</td>
+                        <td>{{ satis.tarih|date:'d.m.Y H:i' }}</td>
+                        <td>{{ satis.satisi_yapan.get_full_name|default:satis.satisi_yapan.username|default:'-' }}</td>
+                        <td>{% if satis.odeme_yontemi == 'kart' %}<span class="badge text-bg-primary">Kart / POS</span>{% else %}<span class="badge bg-success">Nakit</span>{% endif %}</td>
+                        <td class="text-end fw-semibold">{{ satis.toplam_tutar }} ₺</td>
+                        <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{% url 'satis_detay' satis.id %}">Fiş</a></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center text-secondary py-4">Bu tarih aralığında satış bulunmuyor.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if satislar.has_other_pages %}
+<nav class="mt-4" aria-label="Satış sayfaları"><ul class="pagination justify-content-center mb-0">
+    {% if satislar.has_previous %}<li class="page-item"><a class="page-link" href="?{{ filtre_sorgusu }}&sayfa={{ satislar.previous_page_number }}">Önceki</a></li>{% else %}<li class="page-item disabled"><span class="page-link">Önceki</span></li>{% endif %}
+    {% for sayfa in satislar.paginator.page_range %}<li class="page-item {% if sayfa == satislar.number %}active{% endif %}"><a class="page-link" href="?{{ filtre_sorgusu }}&sayfa={{ sayfa }}">{{ sayfa }}</a></li>{% endfor %}
+    {% if satislar.has_next %}<li class="page-item"><a class="page-link" href="?{{ filtre_sorgusu }}&sayfa={{ satislar.next_page_number }}">Sonraki</a></li>{% else %}<li class="page-item disabled"><span class="page-link">Sonraki</span></li>{% endif %}
+</ul></nav>
+{% endif %}
+{% endblock %}

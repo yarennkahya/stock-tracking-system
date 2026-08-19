@@ -84,6 +84,13 @@ class HizliUrunEklemeTestleri(TestCase):
         self.assertContains(barkod_response, 'PVC Dirsek')
         self.assertContains(alt_kategori_response, 'PVC Dirsek')
 
+    def test_urun_listesi_canli_filtreleme_bilesenlerini_sunar(self):
+        response = self.client.get(reverse('ana_sayfa'))
+
+        self.assertContains(response, 'urunFiltreFormu')
+        self.assertContains(response, 'canliFiltrele')
+        self.assertContains(response, 'Sonuçlar otomatik yenilenir')
+
     def test_urun_duzenleme_bilgileri_ve_barkodu_gunceller(self):
         urun = Urun.objects.create(
             ad='Eski Ürün', kategori=self.kategori, alis_fiyati='10.00', satis_fiyati='15.00', stok_miktari=2,

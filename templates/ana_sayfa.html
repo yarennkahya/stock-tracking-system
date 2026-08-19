@@ -19,14 +19,14 @@
 
 <div class="card mb-4">
     <div class="card-body">
-        <form method="get" class="row g-3 align-items-end">
+        <form method="get" id="urunFiltreFormu" class="row g-3 align-items-end">
             <div class="col-lg-3 col-md-6">
                 <label class="form-label" for="arama">Ürün veya barkod ara</label>
                 <input class="form-control" id="arama" name="arama" value="{{ arama }}" placeholder="Örn. klozet veya 869...">
             </div>
             <div class="col-lg-2 col-md-6">
                 <label class="form-label" for="anaKategori">Ana kategori</label>
-                <select class="form-select" id="anaKategori" name="ana_kategori" onchange="this.form.submit()">
+                <select class="form-select" id="anaKategori" name="ana_kategori">
                     <option value="">Tüm kategoriler</option>
                     {% for kategori in ana_kategoriler %}
                     <option value="{{ kategori.id }}" {% if secili_ana_kategori_id == kategori.id|stringformat:'s' %}selected{% endif %}>{{ kategori.ad }}</option>
@@ -50,8 +50,8 @@
                     <option value="yeterli" {% if stok_durumu == 'yeterli' %}selected{% endif %}>Yeterli stok</option>
                 </select>
             </div>
-            <div class="col-lg-3 col-md-6 d-flex gap-2">
-                <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> Filtrele</button>
+            <div class="col-lg-3 col-md-6 d-flex align-items-center gap-2">
+                <span class="small text-secondary"><i class="bi bi-lightning-charge"></i> Sonuçlar otomatik yenilenir</span>
                 <a class="btn btn-outline-secondary" href="{% url 'ana_sayfa' %}">Temizle</a>
             </div>
         </form>
@@ -123,4 +123,28 @@
     </ul>
 </nav>
 {% endif %}
+<script>
+    const urunFiltreFormu = document.getElementById('urunFiltreFormu');
+    const urunAramaFiltresi = document.getElementById('arama');
+    const anaKategoriFiltresi = document.getElementById('anaKategori');
+    const altKategoriFiltresi = document.getElementById('altKategori');
+    const stokDurumuFiltresi = document.getElementById('stokDurumu');
+    let filtreBekleme;
+
+    function canliFiltrele() {
+        window.clearTimeout(filtreBekleme);
+        urunFiltreFormu.requestSubmit();
+    }
+
+    urunAramaFiltresi.addEventListener('input', () => {
+        window.clearTimeout(filtreBekleme);
+        filtreBekleme = window.setTimeout(canliFiltrele, 320);
+    });
+    anaKategoriFiltresi.addEventListener('change', () => {
+        altKategoriFiltresi.value = '';
+        canliFiltrele();
+    });
+    altKategoriFiltresi.addEventListener('change', canliFiltrele);
+    stokDurumuFiltresi.addEventListener('change', canliFiltrele);
+</script>
 {% endblock %}

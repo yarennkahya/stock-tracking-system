@@ -21,6 +21,11 @@
         </a>
     </li>
     <li class="nav-item">
+        <a class="nav-link {% if request.resolver_match.url_name == 'satis_raporu' %}active{% endif %}" href="{% url 'satis_raporu' %}">
+            <i class="bi bi-graph-up-arrow"></i> Satışlar
+        </a>
+    </li>
+    <li class="nav-item">
         <a class="nav-link {% if request.resolver_match.url_name == 'barkod_tara' %}active{% endif %}" href="{% url 'barkod_tara' %}">
             <i class="bi bi-upc-scan"></i> {% trans "Barkod Tara" %}
         </a>
