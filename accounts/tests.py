@@ -22,6 +22,34 @@ class HesapAkisiTestleri(TestCase):
         self.assertContains(response, firma.ad)
         self.assertContains(response, '5000,00')
 
+    def test_firma_ekleme_ekranindan_firma_kaydedilir(self):
+        user = User.objects.create_user('deneme_kullanici', 'deneme@example.com', 'GucluSifre123!')
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse('firma_ekle'),
+            {'ad': 'Yeni Tedarikçi', 'telefon': '05320000000', 'adres': 'İstanbul'},
+        )
+
+        self.assertRedirects(response, reverse('firma_listesi'))
+        self.assertTrue(Firma.objects.filter(ad='Yeni Tedarikçi').exists())
+
+    def test_senet_ekleme_ekranindan_senet_kaydedilir(self):
+        user = User.objects.create_user('deneme_kullanici', 'deneme@example.com', 'GucluSifre123!')
+        firma = Firma.objects.create(ad='Yeni Tedarikçi')
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse('senet_ekle'),
+            {
+                'firma': firma.id, 'tip': 'borc', 'tutar': '1250.50',
+                'vade_tarihi': date.today() + timedelta(days=5), 'durum': 'bekliyor', 'aciklama': 'Mal alım senedi',
+            },
+        )
+
+        self.assertRedirects(response, reverse('senet_takip'))
+        self.assertTrue(Senet.objects.filter(firma=firma, tutar='1250.50').exists())
+
     def test_giris_yapan_kullanici_hesap_ozetini_gorur(self):
         user = User.objects.create_user(
             'deneme_kullanici',

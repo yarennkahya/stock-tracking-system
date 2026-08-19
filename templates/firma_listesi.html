@@ -3,13 +3,16 @@
 
 {% block content %}
 <div class="page-header">
-    <div class="page-header-icon"><i class="bi bi-building"></i></div>
-    <div>
-        <h1>Firmalar</h1>
-        <p class="page-header-sub">Cari hesap ilişkisi olan firmaları yönet</p>
+    <div class="d-flex" style="gap: var(--space-4);">
+        <div class="page-header-icon"><i class="bi bi-building"></i></div>
+        <div>
+            <h1>Firmalar</h1>
+            <p class="page-header-sub">Cari hesap ilişkisi olan firmaları yönet</p>
+        </div>
     </div>
+    <a href="{% url 'firma_ekle' %}" class="btn btn-primary ms-auto"><i class="bi bi-plus-lg"></i> Firma Ekle</a>
 </div>
-<table class="table">
+<div class="card"><div class="card-body p-0"><div class="table-responsive"><table class="table mb-0">
     <thead>
         <tr><th>Firma</th><th>Telefon</th><th>Bakiye</th></tr>
     </thead>
@@ -32,5 +35,5 @@
         <tr><td colspan="3">Henüz firma eklenmemiş.</td></tr>
         {% endfor %}
     </tbody>
-</table>
+</table></div></div></div>
 {% endblock %}

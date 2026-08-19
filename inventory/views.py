@@ -1,18 +1,78 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.db.models import F, Q
 from django.http import JsonResponse
+from django.urls import reverse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET
+from django.core.paginator import Paginator
 
-from .forms import KategoriFormu, UrunForm
+from .forms import AltKategoriFormu, UrunForm
 from .models import Barkod, Kategori, StokHareketi, Urun
+
+
+def _gecerli_kategori_id(deger):
+    try:
+        kategori_id = int(deger)
+    except (TypeError, ValueError):
+        return None
+    return kategori_id if kategori_id > 0 else None
 
 
 @login_required
 def ana_sayfa(request):
-    urunler = Urun.objects.select_related('kategori').all()
-    return render(request, 'ana_sayfa.html', {'urunler': urunler})
+    urunler = Urun.objects.select_related('kategori__parent').all()
+    ana_kategoriler = Kategori.objects.filter(parent__isnull=True).order_by('ad')
+
+    arama = request.GET.get('arama', '').strip()
+    ana_kategori_id = request.GET.get('ana_kategori', '').strip()
+    alt_kategori_id = request.GET.get('alt_kategori', '').strip()
+    stok_durumu = request.GET.get('stok_durumu', '')
+
+    secili_ana_kategori = None
+    if ana_kategori_id:
+        secili_ana_kategori = ana_kategoriler.filter(pk=_gecerli_kategori_id(ana_kategori_id)).first()
+        if secili_ana_kategori:
+            urunler = urunler.filter(
+                Q(kategori=secili_ana_kategori) | Q(kategori__parent=secili_ana_kategori)
+            )
+        else:
+            ana_kategori_id = ''
+
+    alt_kategoriler = Kategori.objects.none()
+    if secili_ana_kategori:
+        alt_kategoriler = secili_ana_kategori.alt_kategoriler.order_by('ad')
+        if alt_kategori_id:
+            secili_alt_kategori = alt_kategoriler.filter(pk=_gecerli_kategori_id(alt_kategori_id)).first()
+            if secili_alt_kategori:
+                urunler = urunler.filter(kategori=secili_alt_kategori)
+            else:
+                alt_kategori_id = ''
+
+    if arama:
+        urunler = urunler.filter(Q(ad__icontains=arama) | Q(barkodlar__barkod_no__icontains=arama)).distinct()
+
+    if stok_durumu == 'kritik':
+        urunler = urunler.filter(stok_miktari__lte=F('kritik_stok_seviyesi'))
+    elif stok_durumu == 'yeterli':
+        urunler = urunler.filter(stok_miktari__gt=F('kritik_stok_seviyesi'))
+    else:
+        stok_durumu = ''
+
+    urun_sayfasi = Paginator(urunler.order_by('ad'), 20).get_page(request.GET.get('sayfa'))
+    filtreler = request.GET.copy()
+    filtreler.pop('sayfa', None)
+    return render(request, 'ana_sayfa.html', {
+        'urunler': urun_sayfasi,
+        'ana_kategoriler': ana_kategoriler,
+        'alt_kategoriler': alt_kategoriler,
+        'arama': arama,
+        'secili_ana_kategori_id': ana_kategori_id,
+        'secili_alt_kategori_id': alt_kategori_id,
+        'stok_durumu': stok_durumu,
+        'filtre_sorgusu': filtreler.urlencode(),
+    })
 
 
 @login_required
@@ -43,23 +103,77 @@ def urun_ekle(request):
     onceki_barkod = request.GET.get('barkod', '')
     form = UrunForm(request.POST or None, initial={'barkod_no': onceki_barkod})
     if request.method == 'POST' and form.is_valid():
-        urun = form.save()
-        barkod_no = form.cleaned_data.get('barkod_no')
-        if barkod_no:
-            Barkod.objects.create(urun=urun, barkod_no=barkod_no)
+        with transaction.atomic():
+            urun = form.save()
+            barkod_no = form.cleaned_data.get('barkod_no')
+            if barkod_no:
+                Barkod.objects.create(urun=urun, barkod_no=barkod_no)
+        messages.success(request, 'Ürün eklendi.')
         return redirect('urun_detay', urun_id=urun.id)
-    return render(request, 'urun_ekle.html', {'form': form})
+    return render(request, 'urun_ekle.html', {
+        'form': form,
+        'sayfa_basligi': 'Yeni Ürün Ekle',
+        'sayfa_aciklamasi': 'Manuel olarak ya da barkod okutarak yeni ürün ekle',
+        'submit_etiketi': 'Ürünü Kaydet',
+    })
+
+
+@login_required
+def urun_duzenle(request, urun_id):
+    urun = get_object_or_404(Urun, id=urun_id)
+    form = UrunForm(request.POST or None, instance=urun)
+    if request.method == 'POST' and form.is_valid():
+        with transaction.atomic():
+            urun = form.save()
+            barkod_no = form.cleaned_data['barkod_no']
+            mevcut_barkod = urun.barkodlar.order_by('id').first()
+            if barkod_no:
+                if mevcut_barkod:
+                    mevcut_barkod.barkod_no = barkod_no
+                    mevcut_barkod.save(update_fields=['barkod_no'])
+                else:
+                    Barkod.objects.create(urun=urun, barkod_no=barkod_no)
+            else:
+                urun.barkodlar.all().delete()
+        messages.success(request, 'Ürün bilgileri güncellendi.')
+        return redirect('urun_detay', urun_id=urun.id)
+    return render(request, 'urun_ekle.html', {
+        'form': form,
+        'urun': urun,
+        'sayfa_basligi': 'Ürünü Düzenle',
+        'sayfa_aciklamasi': f'{urun.ad} ürününün bilgilerini güncelleyin',
+        'submit_etiketi': 'Değişiklikleri Kaydet',
+    })
 
 
 @login_required
 def kategori_listesi(request):
-    form = KategoriFormu(request.POST or None)
-    if request.method == 'POST' and form.is_valid():
-        form.save()
-        messages.success(request, 'Kategori kaydedildi.')
-        return redirect('kategori_listesi')
-    ana_kategoriler = Kategori.objects.filter(parent__isnull=True).prefetch_related('alt_kategoriler')
-    return render(request, 'kategori_listesi.html', {'form': form, 'ana_kategoriler': ana_kategoriler})
+    ana_kategoriler = Kategori.objects.filter(parent__isnull=True).order_by('ad')
+    secili_ana_kategori_id = request.POST.get('ana_kategori') or request.GET.get('ana_kategori')
+    secili_ana_kategori = None
+    if secili_ana_kategori_id:
+        secili_ana_kategori = ana_kategoriler.filter(pk=_gecerli_kategori_id(secili_ana_kategori_id)).first()
+
+    form = AltKategoriFormu(request.POST or None)
+    if request.method == 'POST':
+        if not secili_ana_kategori:
+            messages.error(request, 'Önce geçerli bir ana kategori seçin.')
+        elif form.is_valid():
+            alt_kategori = form.save(commit=False)
+            alt_kategori.parent = secili_ana_kategori
+            alt_kategori.save()
+            messages.success(request, f'{secili_ana_kategori.ad} için alt kategori eklendi.')
+            return redirect(f'{reverse("kategori_listesi")}?ana_kategori={secili_ana_kategori.id}')
+
+    alt_kategoriler = Kategori.objects.none()
+    if secili_ana_kategori:
+        alt_kategoriler = secili_ana_kategori.alt_kategoriler.order_by('ad')
+    return render(request, 'kategori_listesi.html', {
+        'form': form,
+        'ana_kategoriler': ana_kategoriler,
+        'secili_ana_kategori': secili_ana_kategori,
+        'alt_kategoriler': alt_kategoriler,
+    })
 
 
 @login_required

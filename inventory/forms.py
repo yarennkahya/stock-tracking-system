@@ -26,19 +26,32 @@ class UrunForm(forms.ModelForm):
         self.fields['kategori'].queryset = Kategori.objects.filter(parent__isnull=False).select_related('parent')
         self.fields['kategori'].label_from_instance = lambda kategori: kategori.tam_ad
 
+        if self.instance and self.instance.pk and 'barkod_no' not in self.initial:
+            mevcut_barkod = self.instance.barkodlar.order_by('id').first()
+            if mevcut_barkod:
+                self.initial['barkod_no'] = mevcut_barkod.barkod_no
 
-class KategoriFormu(forms.ModelForm):
+    def clean_barkod_no(self):
+        barkod_no = self.cleaned_data['barkod_no'].strip()
+        if not barkod_no:
+            return barkod_no
+
+        from .models import Barkod
+
+        mevcut_barkodlar = Barkod.objects.filter(barkod_no=barkod_no)
+        if self.instance and self.instance.pk:
+            mevcut_barkodlar = mevcut_barkodlar.exclude(urun=self.instance)
+        if mevcut_barkodlar.exists():
+            raise forms.ValidationError('Bu barkod başka bir üründe kayıtlı.')
+        return barkod_no
+
+
+class AltKategoriFormu(forms.ModelForm):
     class Meta:
         model = Kategori
-        fields = ('ad', 'parent', 'aciklama')
-        labels = {'ad': 'Kategori adı', 'parent': 'Ana kategori', 'aciklama': 'Açıklama'}
+        fields = ('ad', 'aciklama')
+        labels = {'ad': 'Alt kategori adı', 'aciklama': 'Açıklama'}
         widgets = {
-            'ad': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Örn. PVC Boru ve Ek Parçaları'}),
-            'parent': forms.Select(attrs={'class': 'form-select'}),
+            'ad': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Örn. PVC ek parçaları'}),
             'aciklama': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['parent'].queryset = Kategori.objects.filter(parent__isnull=True)
-        self.fields['parent'].empty_label = 'Ana kategori olarak ekle'

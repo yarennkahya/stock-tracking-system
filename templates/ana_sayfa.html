@@ -4,12 +4,12 @@
 {% block title %}{% trans "Ürünler" %}{% endblock %}
 
 {% block content %}
-   <div class="page-header">
+<div class="page-header">
     <div class="d-flex" style="gap: var(--space-4);">
         <div class="page-header-icon"><i class="bi bi-box-seam"></i></div>
         <div>
             <h1>{% trans "Ürün Listesi" %}</h1>
-            <p class="page-header-sub">{% trans "Stoktaki tüm ürünleri görüntüle ve yönet" %}</p>
+            <p class="page-header-sub">{% trans "Arayın, filtreleyin ve ürün bilgilerini yönetin" %}</p>
         </div>
     </div>
     <a href="{% url 'urun_ekle' %}" class="btn btn-primary ms-auto">
@@ -17,38 +17,110 @@
     </a>
 </div>
 
-    <table class="table table-striped table-hover">
-        <thead>
-            <tr>
-                <th>{% trans "Ürün Adı" %}</th>
-                <th>{% trans "Kategori" %}</th>
-                <th>{% trans "Satış Fiyatı" %}</th>
-                <th>{% trans "Stok" %}</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for urun in urunler %}
-            <tr>
-                <td>{{ urun.ad }}</td>
-                <td>{{ urun.kategori }}</td>
-                <td>{{ urun.satis_fiyati }} ₺</td>
-                <td>
-                    {% if urun.stok_miktari <= urun.kritik_stok_seviyesi %}
-                        <span class="badge bg-danger">{{ urun.stok_miktari }} ({% trans "Kritik!" %})</span>
-                    {% else %}
-                        <span class="badge bg-success">{{ urun.stok_miktari }}</span>
-                    {% endif %}
-                </td>
-                <td>
-                    <a href="/urun/{{ urun.id }}/" class="btn btn-sm btn-outline-primary">{% trans "Detay" %}</a>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="5">{% trans "Henüz ürün eklenmemiş." %}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-lg-3 col-md-6">
+                <label class="form-label" for="arama">Ürün veya barkod ara</label>
+                <input class="form-control" id="arama" name="arama" value="{{ arama }}" placeholder="Örn. klozet veya 869...">
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label" for="anaKategori">Ana kategori</label>
+                <select class="form-select" id="anaKategori" name="ana_kategori" onchange="this.form.submit()">
+                    <option value="">Tüm kategoriler</option>
+                    {% for kategori in ana_kategoriler %}
+                    <option value="{{ kategori.id }}" {% if secili_ana_kategori_id == kategori.id|stringformat:'s' %}selected{% endif %}>{{ kategori.ad }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label" for="altKategori">Alt kategori</label>
+                <select class="form-select" id="altKategori" name="alt_kategori" {% if not secili_ana_kategori_id %}disabled{% endif %}>
+                    <option value="">Tüm alt kategoriler</option>
+                    {% for kategori in alt_kategoriler %}
+                    <option value="{{ kategori.id }}" {% if secili_alt_kategori_id == kategori.id|stringformat:'s' %}selected{% endif %}>{{ kategori.ad }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label" for="stokDurumu">Stok durumu</label>
+                <select class="form-select" id="stokDurumu" name="stok_durumu">
+                    <option value="">Tüm stoklar</option>
+                    <option value="kritik" {% if stok_durumu == 'kritik' %}selected{% endif %}>Kritik / tükenmek üzere</option>
+                    <option value="yeterli" {% if stok_durumu == 'yeterli' %}selected{% endif %}>Yeterli stok</option>
+                </select>
+            </div>
+            <div class="col-lg-3 col-md-6 d-flex gap-2">
+                <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> Filtrele</button>
+                <a class="btn btn-outline-secondary" href="{% url 'ana_sayfa' %}">Temizle</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>{% trans "Ürün Adı" %}</th>
+                        <th>{% trans "Kategori" %}</th>
+                        <th>{% trans "Satış Fiyatı" %}</th>
+                        <th>{% trans "Stok" %}</th>
+                        <th class="text-end">İşlem</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for urun in urunler %}
+                    <tr>
+                        <td class="fw-semibold">{{ urun.ad }}</td>
+                        <td>{{ urun.kategori.tam_ad }}</td>
+                        <td>{{ urun.satis_fiyati }} ₺</td>
+                        <td>
+                            {% if urun.stok_miktari <= urun.kritik_stok_seviyesi %}
+                                <span class="badge bg-danger">{{ urun.stok_miktari }} ({% trans "Kritik!" %})</span>
+                            {% else %}
+                                <span class="badge bg-success">{{ urun.stok_miktari }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'urun_detay' urun.id %}" class="btn btn-sm btn-outline-primary">{% trans "Detay" %}</a>
+                            <a href="{% url 'urun_duzenle' urun.id %}" class="btn btn-sm btn-outline-secondary">Düzenle</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-secondary py-4">Aramanıza veya filtrelerinize uygun ürün bulunamadı.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if urunler.has_other_pages %}
+<nav class="mt-4" aria-label="Ürün sayfaları">
+    <ul class="pagination justify-content-center mb-0">
+        {% if urunler.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?{{ filtre_sorgusu }}&sayfa={{ urunler.previous_page_number }}">Önceki</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">Önceki</span></li>
+        {% endif %}
+        {% for sayfa in urunler.paginator.page_range %}
+        <li class="page-item {% if sayfa == urunler.number %}active{% endif %}"><a class="page-link" href="?{{ filtre_sorgusu }}&sayfa={{ sayfa }}">{{ sayfa }}</a></li>
+        {% endfor %}
+        {% if urunler.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?{{ filtre_sorgusu }}&sayfa={{ urunler.next_page_number }}">Sonraki</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">Sonraki</span></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
 {% endblock %}

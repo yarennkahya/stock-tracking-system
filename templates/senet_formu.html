@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Senet Ekle{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex" style="gap: var(--space-4);">
+        <div class="page-header-icon"><i class="bi bi-file-earmark-text"></i></div>
+        <div>
+            <h1>Senet Ekle</h1>
+            <p class="page-header-sub">Firma, vade ve tutar bilgisini girerek senedi takibe alın</p>
+        </div>
+    </div>
+</div>
+<div class="card" style="max-width: 620px;">
+    <div class="card-body">
+        {% if not firma_var_mi %}
+        <div class="alert alert-warning">Senet ekleyebilmek için önce <a href="{% url 'firma_ekle' %}" class="alert-link">firma eklemelisiniz</a>.</div>
+        {% endif %}
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="mb-3">
+                <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+            {% endfor %}
+            <div class="d-flex gap-2 justify-content-end">
+                <a href="{% url 'senet_takip' %}" class="btn btn-outline-secondary">Vazgeç</a>
+                <button type="submit" class="btn btn-primary" {% if not firma_var_mi %}disabled{% endif %}><i class="bi bi-check-lg"></i> Senedi Kaydet</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

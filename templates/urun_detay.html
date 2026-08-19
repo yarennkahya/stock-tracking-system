@@ -3,7 +3,10 @@
 {% block title %}{{ urun.ad }}{% endblock %}
 
 {% block content %}
-    <a href="/" class="btn btn-link mb-3">&larr; Ürün Listesine Dön</a>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="{% url 'ana_sayfa' %}" class="btn btn-link px-0">&larr; Ürün Listesine Dön</a>
+        <a href="{% url 'urun_duzenle' urun.id %}" class="btn btn-outline-primary"><i class="bi bi-pencil"></i> Düzenle</a>
+    </div>
 
     <div class="card">
         <div class="card-body">

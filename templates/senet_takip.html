@@ -3,11 +3,14 @@
 
 {% block content %}
 <div class="page-header">
-    <div class="page-header-icon"><i class="bi bi-bank"></i></div>
-    <div>
-        <h1>Senet Takip</h1>
-        <p class="page-header-sub">Vadesi yaklaşan ve geçmiş ödemeleri takip et</p>
+    <div class="d-flex" style="gap: var(--space-4);">
+        <div class="page-header-icon"><i class="bi bi-bank"></i></div>
+        <div>
+            <h1>Senet Takip</h1>
+            <p class="page-header-sub">Vadesi yaklaşan ve geçmiş ödemeleri takip et</p>
+        </div>
     </div>
+    <a href="{% url 'senet_ekle' %}" class="btn btn-primary ms-auto"><i class="bi bi-plus-lg"></i> Senet Ekle</a>
 </div>
 {% if gecikmis %}
 <div class="alert alert-danger">

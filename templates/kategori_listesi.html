@@ -8,65 +8,88 @@
         <div class="page-header-icon"><i class="bi bi-diagram-3"></i></div>
         <div>
             <h1>Kategoriler</h1>
-            <p class="page-header-sub">Ana kategori ve alt kategorileri ürün gruplarınıza göre düzenleyin</p>
+            <p class="page-header-sub">Önce ana kategoriyi seçin, ardından yalnızca o gruba alt kategori ekleyin</p>
         </div>
     </div>
 </div>
 
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row align-items-end g-3">
+            <div class="col-md-7">
+                <label class="form-label" for="anaKategori">Ana kategori</label>
+                <select class="form-select" id="anaKategori" name="ana_kategori" onchange="this.form.submit()">
+                    <option value="">Ana kategori seçin</option>
+                    {% for ana_kategori in ana_kategoriler %}
+                    <option value="{{ ana_kategori.id }}" {% if secili_ana_kategori and secili_ana_kategori.id == ana_kategori.id %}selected{% endif %}>{{ ana_kategori.ad }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-auto">
+                <button class="btn btn-outline-primary" type="submit"><i class="bi bi-funnel"></i> Göster</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if secili_ana_kategori %}
 <div class="row g-4">
     <div class="col-lg-5">
-        <div class="card">
+        <div class="card h-100">
             <div class="card-body">
-                <h2 class="h5 mb-3">Kategori ekle</h2>
+                <h2 class="h5 mb-1">{{ secili_ana_kategori.ad }} için alt kategori ekle</h2>
+                <p class="text-secondary small mb-3">Bu ekrandan ana kategori oluşturulmaz; eklediğiniz kayıt doğrudan seçili ana kategoriye bağlanır.</p>
                 <form method="post" novalidate>
                     {% csrf_token %}
+                    <input type="hidden" name="ana_kategori" value="{{ secili_ana_kategori.id }}">
                     <div class="mb-3">
                         <label class="form-label" for="{{ form.ad.id_for_label }}">{{ form.ad.label }}</label>
                         {{ form.ad }}
                         {% for error in form.ad.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label" for="{{ form.parent.id_for_label }}">{{ form.parent.label }}</label>
-                        {{ form.parent }}
-                        <div class="form-text">Boş bırakırsanız ana kategori; seçerseniz o kategorinin alt kategorisi olur.</div>
-                        {% for error in form.parent.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
-                    </div>
                     <div class="mb-4">
                         <label class="form-label" for="{{ form.aciklama.id_for_label }}">{{ form.aciklama.label }}</label>
                         {{ form.aciklama }}
+                        {% for error in form.aciklama.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
-                    <button class="btn btn-primary w-100" type="submit"><i class="bi bi-plus-lg"></i> Kategoriyi kaydet</button>
+                    <button class="btn btn-primary w-100" type="submit"><i class="bi bi-plus-lg"></i> Alt kategoriyi kaydet</button>
                 </form>
             </div>
         </div>
     </div>
     <div class="col-lg-7">
-        <div class="card">
+        <div class="card h-100">
             <div class="card-body">
-                <h2 class="h5 mb-3">Kategori ağacı</h2>
-                {% if ana_kategoriler %}
-                    <div class="list-group list-group-flush">
-                    {% for ana_kategori in ana_kategoriler %}
-                        <div class="list-group-item px-0">
-                            <div class="fw-semibold"><i class="bi bi-folder2-open me-2 text-warning"></i>{{ ana_kategori.ad }}</div>
-                            {% if ana_kategori.aciklama %}<div class="small text-secondary mt-1 ms-4">{{ ana_kategori.aciklama }}</div>{% endif %}
-                            {% if ana_kategori.alt_kategoriler.all %}
-                                <ul class="list-unstyled ms-4 mt-2 mb-0">
-                                {% for alt_kategori in ana_kategori.alt_kategoriler.all %}
-                                    <li class="py-1"><i class="bi bi-folder me-2 text-secondary"></i>{{ alt_kategori.ad }}</li>
-                                {% endfor %}
-                                </ul>
-                            {% else %}
-                                <div class="small text-secondary ms-4 mt-2">Henüz alt kategori yok.</div>
-                            {% endif %}
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">{{ secili_ana_kategori.ad }} alt kategorileri</h2>
+                    <span class="badge text-bg-secondary">{{ alt_kategoriler|length }} kayıt</span>
+                </div>
+                {% if alt_kategoriler %}
+                <div class="list-group list-group-flush">
+                    {% for alt_kategori in alt_kategoriler %}
+                    <div class="list-group-item px-0 d-flex align-items-start">
+                        <i class="bi bi-folder2-open text-warning me-2 mt-1"></i>
+                        <div>
+                            <div class="fw-semibold">{{ alt_kategori.ad }}</div>
+                            {% if alt_kategori.aciklama %}<div class="small text-secondary mt-1">{{ alt_kategori.aciklama }}</div>{% endif %}
                         </div>
-                    {% endfor %}
                     </div>
+                    {% endfor %}
+                </div>
                 {% else %}
-                    <p class="text-secondary mb-0">Henüz kategori eklenmedi.</p>
+                <div class="text-secondary py-4 text-center">Bu ana kategori için henüz alt kategori yok.</div>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-folder2-open fs-2 text-warning"></i>
+        <h2 class="h5 mt-3">Bir ana kategori seçin</h2>
+        <p class="text-secondary mb-0">Alt kategorileri görmek veya yeni alt kategori eklemek için yukarıdan bir ana kategori seçin.</p>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
