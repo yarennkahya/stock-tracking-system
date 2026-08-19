@@ -3,6 +3,13 @@ from .models import Kategori, Urun
 
 
 class UrunForm(forms.ModelForm):
+    ana_kategori = forms.ModelChoiceField(
+        queryset=Kategori.objects.none(),
+        required=True,
+        label='Ana kategori',
+        empty_label='Ana kategori seçin',
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
     barkod_no = forms.CharField(
         required=False,
         label="Barkod Numarası (opsiyonel)",
@@ -23,8 +30,23 @@ class UrunForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['kategori'].queryset = Kategori.objects.filter(parent__isnull=False).select_related('parent')
-        self.fields['kategori'].label_from_instance = lambda kategori: kategori.tam_ad
+        ana_kategoriler = Kategori.objects.filter(parent__isnull=True).order_by('ad')
+        self.fields['ana_kategori'].queryset = ana_kategoriler
+        self.fields['kategori'].label = 'Alt kategori'
+        self.fields['kategori'].empty_label = 'Alt kategori seçin'
+
+        secili_ana_kategori_id = self.data.get(self.add_prefix('ana_kategori')) if self.is_bound else None
+        if not secili_ana_kategori_id:
+            secili_ana_kategori_id = self.initial.get('ana_kategori')
+        if not secili_ana_kategori_id and self.instance and self.instance.pk:
+            secili_ana_kategori_id = self.instance.kategori.parent_id
+
+        secili_ana_kategori = ana_kategoriler.filter(pk=secili_ana_kategori_id).first()
+        if secili_ana_kategori:
+            self.fields['ana_kategori'].initial = secili_ana_kategori
+            self.fields['kategori'].queryset = secili_ana_kategori.alt_kategoriler.order_by('ad')
+        else:
+            self.fields['kategori'].queryset = Kategori.objects.none()
 
         if self.instance and self.instance.pk and 'barkod_no' not in self.initial:
             mevcut_barkod = self.instance.barkodlar.order_by('id').first()

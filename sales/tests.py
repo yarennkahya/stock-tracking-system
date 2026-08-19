@@ -37,6 +37,12 @@ class SatisAkisiTestleri(TestCase):
 
         self.assertContains(sayfa, 'urunAramaInput')
         self.assertContains(sayfa, 'sepet-verisi')
+        self.assertContains(sayfa, 'window.bootstrap && window.bootstrap.Modal')
+        self.assertContains(sayfa, 'bootstrap.bundle.min.js')
+        self.assertLess(
+            sayfa.content.find(b'bootstrap.bundle.min.js'),
+            sayfa.content.find(b'const urunAramaInput'),
+        )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()['sonuclar'][0]['ad'], 'Seramik Klozet')
         self.assertEqual(response.json()['sonuclar'][0]['satis_fiyati'], '1250.00')

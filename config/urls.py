@@ -63,6 +63,7 @@ urlpatterns = [
     path('urun/<int:urun_id>/duzenle/', views.urun_duzenle, name='urun_duzenle'),
     path('barkod-tara/', views.barkod_tara, name='barkod_tara'),
     path('api/barkod/<str:barkod_no>/', views.barkod_sorgula, name='barkod_sorgula'),
+    path('api/urunler/', views.urun_listesi_api, name='urun_listesi_api'),
     path('i18n/', include('django.conf.urls.i18n')),
 
     path('satis/', sales_views.satis_ekrani, name='satis_ekrani'),

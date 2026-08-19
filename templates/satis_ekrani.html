@@ -117,6 +117,9 @@
 </div>
 
 {{ sepet|json_script:"sepet-verisi" }}
+{% endblock %}
+
+{% block page_scripts %}
 <script>
 const urunAramaInput = document.getElementById('urunAramaInput');
 const aramaSonuclari = document.getElementById('aramaSonuclari');
@@ -133,7 +136,8 @@ const posOnay = document.getElementById('posOnay');
 const posIslemNo = document.getElementById('posIslemNo');
 const nakitOdeBtn = document.getElementById('nakitOdeBtn');
 const kartPosOdeBtn = document.getElementById('kartPosOdeBtn');
-const demoPosModal = new bootstrap.Modal(document.getElementById('demoPosModal'));
+const demoPosModalElemani = document.getElementById('demoPosModal');
+const demoPosModal = window.bootstrap && window.bootstrap.Modal ? new window.bootstrap.Modal(demoPosModalElemani) : null;
 const posDurumMetni = document.getElementById('posDurumMetni');
 const posTerminalEkran = document.getElementById('posTerminalEkran');
 const posToplam = document.getElementById('posToplam');
@@ -242,6 +246,10 @@ nakitOdeBtn.addEventListener('click', () => {
     odemeYontemi.value = 'nakit'; posOnay.value = '0'; posIslemNo.value = ''; odemeFormu.submit();
 });
 kartPosOdeBtn.addEventListener('click', () => {
+    if (!demoPosModal) {
+        odemeHatasiGoster('Demo POS penceresi şu an yüklenemedi. Nakit satışa devam edebilir veya sayfayı yenileyebilirsiniz.');
+        return;
+    }
     odemeHatasiGizle();
     posOnay.value = '0'; posIslemNo.value = '';
     posToplam.textContent = paraYaz(sepet.toplam);
@@ -265,7 +273,7 @@ posOnaylaBtn.addEventListener('click', () => {
     }, 650);
 });
 posReddetBtn.addEventListener('click', () => {
-    demoPosModal.hide();
+    if (demoPosModal) demoPosModal.hide();
     odemeHatasiGoster('Demo POS işlemi reddedildi. Sepetiniz korunuyor; nakit veya kart ile tekrar deneyebilirsiniz.');
 });
 document.getElementById('demoPosModal').addEventListener('hidden.bs.modal', () => {

@@ -15,15 +15,57 @@
 
 <div class="card" style="max-width: 600px;">
     <div class="card-body">
-        <form method="post">
+        <form method="post" id="urunFormu">
             {% csrf_token %}
-            {% for field in form %}
             <div class="mb-3">
-                <label class="form-label">{{ field.label }}</label>
-                {{ field }}
-                {% if field.errors %}<div class="text-danger small mt-1">{{ field.errors }}</div>{% endif %}
+                <label class="form-label" for="{{ form.ad.id_for_label }}">{{ form.ad.label }}</label>
+                {{ form.ad }}
+                {% if form.ad.errors %}<div class="text-danger small mt-1">{{ form.ad.errors }}</div>{% endif %}
             </div>
-            {% endfor %}
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label" for="{{ form.ana_kategori.id_for_label }}">{{ form.ana_kategori.label }}</label>
+                    {{ form.ana_kategori }}
+                    <div class="form-text">Önce ürünün ana grubunu seçin.</div>
+                    {% if form.ana_kategori.errors %}<div class="text-danger small mt-1">{{ form.ana_kategori.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label" for="{{ form.kategori.id_for_label }}">{{ form.kategori.label }}</label>
+                    {{ form.kategori }}
+                    <div class="form-text" id="altKategoriYardim">Ana kategori seçildikten sonra uygun alt kategoriler gelir.</div>
+                    {% if form.kategori.errors %}<div class="text-danger small mt-1">{{ form.kategori.errors }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label" for="{{ form.alis_fiyati.id_for_label }}">{{ form.alis_fiyati.label }}</label>
+                    {{ form.alis_fiyati }}
+                    {% if form.alis_fiyati.errors %}<div class="text-danger small mt-1">{{ form.alis_fiyati.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label" for="{{ form.satis_fiyati.id_for_label }}">{{ form.satis_fiyati.label }}</label>
+                    {{ form.satis_fiyati }}
+                    {% if form.satis_fiyati.errors %}<div class="text-danger small mt-1">{{ form.satis_fiyati.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label" for="{{ form.stok_miktari.id_for_label }}">{{ form.stok_miktari.label }}</label>
+                    {{ form.stok_miktari }}
+                    {% if form.stok_miktari.errors %}<div class="text-danger small mt-1">{{ form.stok_miktari.errors }}</div>{% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label" for="{{ form.kritik_stok_seviyesi.id_for_label }}">{{ form.kritik_stok_seviyesi.label }}</label>
+                    {{ form.kritik_stok_seviyesi }}
+                    {% if form.kritik_stok_seviyesi.errors %}<div class="text-danger small mt-1">{{ form.kritik_stok_seviyesi.errors }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="{{ form.barkod_no.id_for_label }}">{{ form.barkod_no.label }}</label>
+                {{ form.barkod_no }}
+                {% if form.barkod_no.errors %}<div class="text-danger small mt-1">{{ form.barkod_no.errors }}</div>{% endif %}
+            </div>
             {% if urun %}<p class="form-text mb-3">Barkod alanını boş bırakırsanız ürünün kayıtlı barkodu kaldırılır.</p>{% endif %}
             <button type="submit" class="btn btn-primary w-100">
                 <i class="bi bi-check-lg"></i> {{ submit_etiketi }}
@@ -31,4 +73,70 @@
         </form>
     </div>
 </div>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+    (() => {
+        const anaKategori = document.getElementById('{{ form.ana_kategori.id_for_label }}');
+        const altKategori = document.getElementById('{{ form.kategori.id_for_label }}');
+        const yardimMetni = document.getElementById('altKategoriYardim');
+        const altKategoriApiSablonu = '{% url "alt_kategoriler" 0 %}';
+        let sonIstekNo = 0;
+
+        function altKategoriSeceneginiSifirla(metin, devreDisi = true) {
+            altKategori.replaceChildren(new Option(metin, ''));
+            altKategori.disabled = devreDisi;
+        }
+
+        async function altKategorileriYukle() {
+            const anaKategoriId = anaKategori.value;
+            const seciliAltKategoriId = altKategori.dataset.seciliId;
+            const istekNo = ++sonIstekNo;
+
+            if (!anaKategoriId) {
+                altKategoriSeceneginiSifirla('Önce ana kategori seçin');
+                yardimMetni.textContent = 'Ana kategori seçildikten sonra uygun alt kategoriler gelir.';
+                return;
+            }
+
+            altKategoriSeceneginiSifirla('Alt kategoriler yükleniyor…');
+            yardimMetni.textContent = 'Seçtiğiniz ana kategoriye ait alt kategoriler yükleniyor.';
+
+            try {
+                const yanit = await fetch(altKategoriApiSablonu.replace('/0/', `/${anaKategoriId}/`));
+                if (!yanit.ok) throw new Error('Alt kategoriler alınamadı.');
+                const veri = await yanit.json();
+                if (istekNo !== sonIstekNo) return;
+
+                altKategori.replaceChildren(new Option('Alt kategori seçin', ''));
+                veri.alt_kategoriler.forEach(kategori => altKategori.append(new Option(kategori.ad, kategori.id)));
+                altKategori.disabled = veri.alt_kategoriler.length === 0;
+
+                if (!veri.alt_kategoriler.length) {
+                    altKategori.options[0].text = 'Bu ana kategoride alt kategori yok';
+                    yardimMetni.textContent = 'Bu ana kategoriye ürün eklemek için önce bir alt kategori oluşturun.';
+                    return;
+                }
+
+                if (seciliAltKategoriId && veri.alt_kategoriler.some(kategori => String(kategori.id) === seciliAltKategoriId)) {
+                    altKategori.value = seciliAltKategoriId;
+                }
+                altKategori.dataset.seciliId = '';
+                yardimMetni.textContent = 'Yalnızca seçtiğiniz ana kategoriye ait alt kategoriler listelenir.';
+            } catch (hata) {
+                if (istekNo !== sonIstekNo) return;
+                altKategoriSeceneginiSifirla('Alt kategoriler yüklenemedi');
+                yardimMetni.textContent = 'Alt kategoriler yüklenemedi. Sayfayı yenileyip tekrar deneyin.';
+            }
+        }
+
+        altKategori.dataset.seciliId = '{{ form.kategori.value|default_if_none:"" }}';
+        anaKategori.addEventListener('change', () => {
+            altKategori.dataset.seciliId = '';
+            altKategorileriYukle();
+        });
+        altKategorileriYukle();
+    })();
+</script>
 {% endblock %}

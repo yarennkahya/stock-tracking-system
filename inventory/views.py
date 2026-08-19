@@ -20,15 +20,14 @@ def _gecerli_kategori_id(deger):
     return kategori_id if kategori_id > 0 else None
 
 
-@login_required
-def ana_sayfa(request):
+def _urunleri_filtrele(parametreler):
     urunler = Urun.objects.select_related('kategori__parent').all()
     ana_kategoriler = Kategori.objects.filter(parent__isnull=True).order_by('ad')
 
-    arama = request.GET.get('arama', '').strip()
-    ana_kategori_id = request.GET.get('ana_kategori', '').strip()
-    alt_kategori_id = request.GET.get('alt_kategori', '').strip()
-    stok_durumu = request.GET.get('stok_durumu', '')
+    arama = parametreler.get('arama', '').strip()
+    ana_kategori_id = parametreler.get('ana_kategori', '').strip()
+    alt_kategori_id = parametreler.get('alt_kategori', '').strip()
+    stok_durumu = parametreler.get('stok_durumu', '')
 
     secili_ana_kategori = None
     if ana_kategori_id:
@@ -60,18 +59,54 @@ def ana_sayfa(request):
     else:
         stok_durumu = ''
 
-    urun_sayfasi = Paginator(urunler.order_by('ad'), 20).get_page(request.GET.get('sayfa'))
-    filtreler = request.GET.copy()
-    filtreler.pop('sayfa', None)
-    return render(request, 'ana_sayfa.html', {
-        'urunler': urun_sayfasi,
+    return urunler.order_by('ad'), {
         'ana_kategoriler': ana_kategoriler,
         'alt_kategoriler': alt_kategoriler,
         'arama': arama,
         'secili_ana_kategori_id': ana_kategori_id,
         'secili_alt_kategori_id': alt_kategori_id,
         'stok_durumu': stok_durumu,
+    }
+
+
+@login_required
+def ana_sayfa(request):
+    urunler, filtre_bilgileri = _urunleri_filtrele(request.GET)
+    urun_sayfasi = Paginator(urunler, 20).get_page(request.GET.get('sayfa'))
+    filtreler = request.GET.copy()
+    filtreler.pop('sayfa', None)
+    return render(request, 'ana_sayfa.html', {
+        'urunler': urun_sayfasi,
         'filtre_sorgusu': filtreler.urlencode(),
+        **filtre_bilgileri,
+    })
+
+
+@login_required
+@require_GET
+def urun_listesi_api(request):
+    urunler, _ = _urunleri_filtrele(request.GET)
+    sayfalayici = Paginator(urunler, 20)
+    sayfa = sayfalayici.get_page(request.GET.get('sayfa'))
+    return JsonResponse({
+        'toplam_sonuc': sayfalayici.count,
+        'urunler': [
+            {
+                'id': urun.id,
+                'ad': urun.ad,
+                'kategori': urun.kategori.tam_ad,
+                'satis_fiyati': str(urun.satis_fiyati),
+                'stok_miktari': urun.stok_miktari,
+                'kritik_stokta': urun.stok_miktari <= urun.kritik_stok_seviyesi,
+            }
+            for urun in sayfa.object_list
+        ],
+        'sayfalama': {
+            'sayfa': sayfa.number,
+            'toplam_sayfa': sayfalayici.num_pages,
+            'onceki_var': sayfa.has_previous(),
+            'sonraki_var': sayfa.has_next(),
+        },
     })
 
 

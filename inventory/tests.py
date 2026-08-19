@@ -88,8 +88,22 @@ class HizliUrunEklemeTestleri(TestCase):
         response = self.client.get(reverse('ana_sayfa'))
 
         self.assertContains(response, 'urunFiltreFormu')
-        self.assertContains(response, 'canliFiltrele')
-        self.assertContains(response, 'Sonuçlar otomatik yenilenir')
+        self.assertContains(response, 'urunleriYukle')
+        self.assertContains(response, 'urunListesiApiUrl')
+        self.assertNotContains(response, 'Sonuçlar otomatik yenilenir')
+
+    def test_urun_listesi_api_arama_sonucunu_sayfa_yenilemeden_doner(self):
+        urun = Urun.objects.create(
+            ad='PPRC Dirsek', kategori=self.kategori, alis_fiyati='8.00', satis_fiyati='13.00', stok_miktari=7,
+        )
+        Barkod.objects.create(urun=urun, barkod_no='8694445556667')
+
+        response = self.client.get(reverse('urun_listesi_api'), {'arama': '8694445556667'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['toplam_sonuc'], 1)
+        self.assertEqual(response.json()['urunler'][0]['ad'], 'PPRC Dirsek')
+        self.assertFalse(response.json()['urunler'][0]['kritik_stokta'])
 
     def test_urun_duzenleme_bilgileri_ve_barkodu_gunceller(self):
         urun = Urun.objects.create(
@@ -100,7 +114,8 @@ class HizliUrunEklemeTestleri(TestCase):
         response = self.client.post(
             reverse('urun_duzenle', args=[urun.id]),
             {
-                'ad': 'Güncel Ürün', 'kategori': self.kategori.id, 'alis_fiyati': '12', 'satis_fiyati': '20',
+                'ad': 'Güncel Ürün', 'ana_kategori': self.kategori.parent_id, 'kategori': self.kategori.id,
+                'alis_fiyati': '12', 'satis_fiyati': '20',
                 'stok_miktari': 7, 'kritik_stok_seviyesi': 3, 'barkod_no': '8690000000002',
             },
         )
@@ -110,6 +125,45 @@ class HizliUrunEklemeTestleri(TestCase):
         self.assertEqual(urun.ad, 'Güncel Ürün')
         self.assertEqual(urun.stok_miktari, 7)
         self.assertTrue(Barkod.objects.filter(urun=urun, barkod_no='8690000000002').exists())
+
+    def test_yeni_urun_ana_kategori_ardindan_alt_kategoriyle_kaydedilir(self):
+        response = self.client.post(
+            reverse('urun_ekle'),
+            {
+                'ad': 'Yeni PVC Dirsek', 'ana_kategori': self.kategori.parent_id, 'kategori': self.kategori.id,
+                'alis_fiyati': '11', 'satis_fiyati': '18', 'stok_miktari': 4,
+                'kritik_stok_seviyesi': 2, 'barkod_no': '8691111111111',
+            },
+        )
+
+        self.assertRedirects(response, reverse('urun_detay', args=[Urun.objects.get(ad='Yeni PVC Dirsek').id]))
+        self.assertEqual(Urun.objects.get(ad='Yeni PVC Dirsek').kategori, self.kategori)
+
+    def test_urun_formu_yalnizca_secilen_ana_kategorinin_altlarini_sunar(self):
+        diger_ana_kategori = Kategori.objects.create(ad='Vitrifiye')
+        diger_alt_kategori = Kategori.objects.create(ad='Klozet', parent=diger_ana_kategori)
+        form = UrunForm(data={'ana_kategori': self.kategori.parent_id})
+
+        self.assertQuerySetEqual(form.fields['kategori'].queryset, [self.kategori])
+
+        response = self.client.post(
+            reverse('urun_ekle'),
+            {
+                'ad': 'Hatalı Kategori', 'ana_kategori': self.kategori.parent_id, 'kategori': diger_alt_kategori.id,
+                'alis_fiyati': '11', 'satis_fiyati': '18', 'stok_miktari': 4,
+                'kritik_stok_seviyesi': 2,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Urun.objects.filter(ad='Hatalı Kategori').exists())
+
+    def test_yeni_urun_formu_iki_asamali_kategori_secimi_sunar(self):
+        response = self.client.get(reverse('urun_ekle'))
+
+        self.assertContains(response, 'Ana kategori')
+        self.assertContains(response, 'Alt kategori')
+        self.assertContains(response, 'altKategorileriYukle')
 
     def test_fiyat_adimi_bir_tldir(self):
         form = UrunForm()

@@ -19,7 +19,7 @@
 
 <div class="card mb-4">
     <div class="card-body">
-        <form method="get" id="urunFiltreFormu" class="row g-3 align-items-end">
+        <form method="get" id="urunFiltreFormu" class="row g-3 align-items-end" novalidate>
             <div class="col-lg-3 col-md-6">
                 <label class="form-label" for="arama">Ürün veya barkod ara</label>
                 <input class="form-control" id="arama" name="arama" value="{{ arama }}" placeholder="Örn. klozet veya 869...">
@@ -51,7 +51,6 @@
                 </select>
             </div>
             <div class="col-lg-3 col-md-6 d-flex align-items-center gap-2">
-                <span class="small text-secondary"><i class="bi bi-lightning-charge"></i> Sonuçlar otomatik yenilenir</span>
                 <a class="btn btn-outline-secondary" href="{% url 'ana_sayfa' %}">Temizle</a>
             </div>
         </form>
@@ -60,6 +59,10 @@
 
 <div class="card">
     <div class="card-body p-0">
+        <div class="p-4 pb-2 d-flex justify-content-between align-items-center">
+            <h2 class="h5 mb-0">Ürünler</h2>
+            <span id="urunSonucSayisi" class="badge text-bg-secondary">{{ urunler.paginator.count }} ürün</span>
+        </div>
         <div class="table-responsive">
             <table class="table table-striped table-hover mb-0">
                 <thead>
@@ -71,7 +74,7 @@
                         <th class="text-end">İşlem</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="urunTabloGovdesi">
                     {% for urun in urunler %}
                     <tr>
                         <td class="fw-semibold">{{ urun.ad }}</td>
@@ -100,8 +103,7 @@
     </div>
 </div>
 
-{% if urunler.has_other_pages %}
-<nav class="mt-4" aria-label="Ürün sayfaları">
+<nav id="urunSayfalama" class="mt-4 {% if not urunler.has_other_pages %}d-none{% endif %}" aria-label="Ürün sayfaları">
     <ul class="pagination justify-content-center mb-0">
         {% if urunler.has_previous %}
         <li class="page-item">
@@ -122,29 +124,145 @@
         {% endif %}
     </ul>
 </nav>
-{% endif %}
 <script>
     const urunFiltreFormu = document.getElementById('urunFiltreFormu');
     const urunAramaFiltresi = document.getElementById('arama');
     const anaKategoriFiltresi = document.getElementById('anaKategori');
     const altKategoriFiltresi = document.getElementById('altKategori');
     const stokDurumuFiltresi = document.getElementById('stokDurumu');
-    let filtreBekleme;
+    const urunTabloGovdesi = document.getElementById('urunTabloGovdesi');
+    const urunSonucSayisi = document.getElementById('urunSonucSayisi');
+    const urunSayfalama = document.getElementById('urunSayfalama');
+    const urunListesiApiUrl = '{% url "urun_listesi_api" %}';
+    const altKategoriApiSablonu = '{% url "alt_kategoriler" 0 %}';
+    const urunDetayUrlSablonu = '{% url "urun_detay" 0 %}';
+    const urunDuzenleUrlSablonu = '{% url "urun_duzenle" 0 %}';
+    let filtreBekleme, sonUrunIstekNo = 0, sonAltKategoriIstekNo = 0;
 
-    function canliFiltrele() {
-        window.clearTimeout(filtreBekleme);
-        urunFiltreFormu.requestSubmit();
+    function urunLinki(sablon, urunId) {
+        return sablon.replace('/0/', `/${urunId}/`);
     }
 
+    function paraYaz(deger) {
+        return `${Number(deger).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ₺`;
+    }
+
+    function hucreOlustur(metin, sinifAdi = '') {
+        const hucre = document.createElement('td');
+        hucre.textContent = metin;
+        if (sinifAdi) hucre.className = sinifAdi;
+        return hucre;
+    }
+
+    function urunTablosunuCiz(urunler) {
+        urunTabloGovdesi.replaceChildren();
+        if (!urunler.length) {
+            const satir = document.createElement('tr');
+            const hucre = hucreOlustur('Aramanıza veya filtrelerinize uygun ürün bulunamadı.', 'text-center text-secondary py-4');
+            hucre.colSpan = 5; satir.appendChild(hucre); urunTabloGovdesi.appendChild(satir);
+            return;
+        }
+        urunler.forEach(urun => {
+            const satir = document.createElement('tr');
+            satir.appendChild(hucreOlustur(urun.ad, 'fw-semibold'));
+            satir.appendChild(hucreOlustur(urun.kategori));
+            satir.appendChild(hucreOlustur(paraYaz(urun.satis_fiyati)));
+
+            const stokHucresi = document.createElement('td');
+            const stokRozeti = document.createElement('span');
+            stokRozeti.className = urun.kritik_stokta ? 'badge bg-danger' : 'badge bg-success';
+            stokRozeti.textContent = urun.kritik_stokta ? `${urun.stok_miktari} (Kritik!)` : urun.stok_miktari;
+            stokHucresi.appendChild(stokRozeti); satir.appendChild(stokHucresi);
+
+            const islemHucresi = document.createElement('td'); islemHucresi.className = 'text-end';
+            const detayBaglantisi = document.createElement('a'); detayBaglantisi.href = urunLinki(urunDetayUrlSablonu, urun.id);
+            detayBaglantisi.className = 'btn btn-sm btn-outline-primary'; detayBaglantisi.textContent = 'Detay';
+            const duzenleBaglantisi = document.createElement('a'); duzenleBaglantisi.href = urunLinki(urunDuzenleUrlSablonu, urun.id);
+            duzenleBaglantisi.className = 'btn btn-sm btn-outline-secondary ms-1'; duzenleBaglantisi.textContent = 'Düzenle';
+            islemHucresi.append(detayBaglantisi, duzenleBaglantisi); satir.appendChild(islemHucresi);
+            urunTabloGovdesi.appendChild(satir);
+        });
+    }
+
+    function sayfaDugmesi(metin, sayfa, devreDisi = false, aktif = false) {
+        const oge = document.createElement('li'); oge.className = `page-item${devreDisi ? ' disabled' : ''}${aktif ? ' active' : ''}`;
+        const dugme = document.createElement('button'); dugme.type = 'button'; dugme.className = 'page-link'; dugme.textContent = metin; dugme.disabled = devreDisi;
+        if (!devreDisi && !aktif) dugme.addEventListener('click', () => urunleriYukle(sayfa));
+        oge.appendChild(dugme); return oge;
+    }
+
+    function sayfalamayiCiz(sayfalama) {
+        urunSayfalama.replaceChildren();
+        if (sayfalama.toplam_sayfa < 2) { urunSayfalama.classList.add('d-none'); return; }
+        urunSayfalama.classList.remove('d-none');
+        const liste = document.createElement('ul'); liste.className = 'pagination justify-content-center mb-0';
+        liste.appendChild(sayfaDugmesi('Önceki', sayfalama.sayfa - 1, !sayfalama.onceki_var));
+        const ilkSayfa = Math.max(1, sayfalama.sayfa - 3);
+        const sonSayfa = Math.min(sayfalama.toplam_sayfa, sayfalama.sayfa + 3);
+        for (let sayfa = ilkSayfa; sayfa <= sonSayfa; sayfa += 1) liste.appendChild(sayfaDugmesi(sayfa, sayfa, false, sayfa === sayfalama.sayfa));
+        liste.appendChild(sayfaDugmesi('Sonraki', sayfalama.sayfa + 1, !sayfalama.sonraki_var));
+        urunSayfalama.appendChild(liste);
+    }
+
+    async function urunleriYukle(sayfa = 1) {
+        const istekNo = ++sonUrunIstekNo;
+        const parametreler = new URLSearchParams(new FormData(urunFiltreFormu));
+        parametreler.set('sayfa', sayfa);
+        try {
+            const yanit = await fetch(`${urunListesiApiUrl}?${parametreler.toString()}`);
+            if (!yanit.ok) throw new Error();
+            const veri = await yanit.json();
+            if (istekNo !== sonUrunIstekNo) return;
+            urunTablosunuCiz(veri.urunler);
+            urunSonucSayisi.textContent = `${veri.toplam_sonuc} ürün`;
+            sayfalamayiCiz(veri.sayfalama);
+            const yeniAdres = `${window.location.pathname}?${parametreler.toString()}`;
+            window.history.replaceState({}, '', yeniAdres);
+        } catch (_) {
+            if (istekNo !== sonUrunIstekNo) return;
+            urunTablosunuCiz([]);
+        }
+    }
+
+    async function altKategorileriYukle() {
+        const anaKategoriId = anaKategoriFiltresi.value;
+        const istekNo = ++sonAltKategoriIstekNo;
+        altKategoriFiltresi.replaceChildren();
+        const varsayilanSecenek = document.createElement('option'); varsayilanSecenek.value = ''; varsayilanSecenek.textContent = 'Tüm alt kategoriler';
+        altKategoriFiltresi.appendChild(varsayilanSecenek);
+        altKategoriFiltresi.disabled = !anaKategoriId;
+        if (!anaKategoriId) return;
+        try {
+            const url = altKategoriApiSablonu.replace('/0/', `/${anaKategoriId}/`);
+            const yanit = await fetch(url); if (!yanit.ok) throw new Error();
+            const veri = await yanit.json();
+            if (istekNo !== sonAltKategoriIstekNo || anaKategoriFiltresi.value !== anaKategoriId) return;
+            veri.alt_kategoriler.forEach(kategori => {
+                const secenek = document.createElement('option'); secenek.value = kategori.id; secenek.textContent = kategori.ad;
+                altKategoriFiltresi.appendChild(secenek);
+            });
+        } catch (_) {
+            altKategoriFiltresi.disabled = true;
+        }
+    }
+
+    urunFiltreFormu.addEventListener('submit', event => { event.preventDefault(); urunleriYukle(); });
     urunAramaFiltresi.addEventListener('input', () => {
         window.clearTimeout(filtreBekleme);
-        filtreBekleme = window.setTimeout(canliFiltrele, 320);
+        filtreBekleme = window.setTimeout(() => urunleriYukle(), 260);
     });
-    anaKategoriFiltresi.addEventListener('change', () => {
-        altKategoriFiltresi.value = '';
-        canliFiltrele();
+    anaKategoriFiltresi.addEventListener('change', async () => {
+        await altKategorileriYukle();
+        urunleriYukle();
     });
-    altKategoriFiltresi.addEventListener('change', canliFiltrele);
-    stokDurumuFiltresi.addEventListener('change', canliFiltrele);
+    altKategoriFiltresi.addEventListener('change', () => urunleriYukle());
+    stokDurumuFiltresi.addEventListener('change', () => urunleriYukle());
+    urunSayfalama.addEventListener('click', event => {
+        const baglanti = event.target.closest('a.page-link');
+        if (!baglanti) return;
+        event.preventDefault();
+        const sayfa = new URL(baglanti.href).searchParams.get('sayfa') || 1;
+        urunleriYukle(sayfa);
+    });
 </script>
 {% endblock %}
