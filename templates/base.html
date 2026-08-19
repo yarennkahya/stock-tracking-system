@@ -57,6 +57,7 @@
             border-color: #34383E;
         }
         [data-theme="dark"] .dropdown-menu { background: var(--color-surface); }
+        [data-theme="dark"] .account-menu .dropdown-divider { border-color: #34383E; }
 
         html { font-size: 18px; }
 
@@ -145,17 +146,19 @@
         }
 
         .page-content { padding: 1.75rem 1.5rem; }
+        .app-messages { margin-bottom: var(--space-5); }
 
-        .lang-switch { margin-right: var(--space-3); }
-        .lang-toggle {
-            min-width: 52px;
+        .lang-switch { margin: 0; }
+        .language-toggle {
+            min-width: 42px;
+            height: 38px;
             border: 1px solid #E5E7E4;
             border-radius: 6px;
             background: var(--color-surface);
             color: var(--color-steel);
             font-size: .8rem;
             font-weight: 700;
-            padding: .45rem .7rem;
+            padding: .45rem .55rem;
             line-height: 1;
             cursor: pointer;
         }
@@ -171,18 +174,27 @@
             justify-content: center;
             cursor: pointer;
         }
+        .language-toggle:hover, .language-toggle:focus-visible,
+        .theme-toggle:hover, .theme-toggle:focus-visible {
+            background: var(--color-accent-soft);
+            border-color: var(--color-accent);
+            color: var(--color-accent);
+        }
 
         .account-trigger {
             display: flex;
             align-items: center;
             gap: .6rem;
             background: none;
-            border: none;
-            padding: .35rem .6rem;
+            border: 1px solid transparent;
+            padding: .35rem .5rem;
             border-radius: 8px;
             cursor: pointer;
         }
-        .account-trigger:hover { background: var(--color-accent-soft); }
+        .account-trigger:hover, .account-trigger:focus-visible {
+            background: var(--color-accent-soft);
+            border-color: var(--color-accent);
+        }
         .account-avatar {
             width: 32px;
             height: 32px;
@@ -197,6 +209,49 @@
             flex-shrink: 0;
         }
         .account-name-inline { font-weight: 600; color: var(--color-ink); font-size: .95rem; }
+        .account-menu { min-width: 250px; padding: .65rem !important; }
+        .account-menu-summary {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            padding: .5rem;
+        }
+        .account-menu-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--color-accent-soft);
+            color: var(--color-accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .account-menu-name { color: var(--color-ink); font-weight: 700; line-height: 1.25; }
+        .account-menu-username { color: var(--color-steel); font-size: .8rem; }
+        .account-menu .dropdown-divider { border-color: #E5E7E4; }
+        .account-menu-link {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            margin: 0 .25rem;
+            border-radius: var(--radius-sm);
+            color: var(--color-ink);
+            font-weight: 600;
+        }
+        .account-menu-link:hover { background: var(--color-accent-soft); color: var(--color-accent); }
+        .account-menu-preferences { padding: .35rem .5rem .2rem; }
+        .account-menu-preference {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-3);
+            padding: .35rem 0;
+            color: var(--color-steel);
+            font-size: .85rem;
+            font-weight: 600;
+        }
 
         .segmented { display: flex; border: 1px solid #E5E7E4; border-radius: 6px; overflow: hidden; }
         .segmented button {
@@ -287,17 +342,7 @@
                     <span class="sidebar-brand mb-0" style="font-size: 1rem;">Stock Tracking System</span>
                 </div>
                 {% if user.is_authenticated %}
-                    <div class="d-flex align-items-center">
-                        <div class="lang-switch">
-                            {% get_current_language as MEVCUT_DIL %}
-                            <form action="{% url 'set_language' %}" method="post">
-                                {% csrf_token %}
-                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                <button type="submit" name="language" value="{% if MEVCUT_DIL == 'tr' %}en{% else %}tr{% endif %}" class="lang-toggle" aria-label="{% if MEVCUT_DIL == 'tr' %}English{% else %}Türkçe{% endif %}" title="{% if MEVCUT_DIL == 'tr' %}English{% else %}Türkçe{% endif %}">
-                                    {{ MEVCUT_DIL|upper }}
-                                </button>
-                            </form>
-                        </div>
+                    <div>
                         {% include 'partials/account_menu.html' %}
                     </div>
                 {% endif %}
@@ -305,17 +350,7 @@
 
             <div class="desktop-topbar">
                 {% if user.is_authenticated %}
-                    <div class="d-flex align-items-center">
-                        <div class="lang-switch">
-                            {% get_current_language as MEVCUT_DIL %}
-                            <form action="{% url 'set_language' %}" method="post">
-                                {% csrf_token %}
-                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                <button type="submit" name="language" value="{% if MEVCUT_DIL == 'tr' %}en{% else %}tr{% endif %}" class="lang-toggle" aria-label="{% if MEVCUT_DIL == 'tr' %}English{% else %}Türkçe{% endif %}" title="{% if MEVCUT_DIL == 'tr' %}English{% else %}Türkçe{% endif %}">
-                                    {{ MEVCUT_DIL|upper }}
-                                </button>
-                            </form>
-                        </div>
+                    <div>
                         {% include 'partials/account_menu.html' %}
                     </div>
                 {% endif %}
@@ -334,6 +369,13 @@
             </div>
 
             <div class="page-content">
+                {% if messages %}
+                    <div class="app-messages">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags|default:'info' }} mb-2" role="alert">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
                 {% block content %}
                 {% endblock %}
             </div>
@@ -345,26 +387,27 @@
     <script>
         function temaUygula(tema) {
             document.documentElement.setAttribute('data-theme', tema);
-            var themeButton = document.getElementById('themeToggleBtn');
-            if (themeButton) {
+            var themeButtons = document.querySelectorAll('[data-theme-toggle]');
+            themeButtons.forEach(function(themeButton) {
                 var isDark = tema === 'dark';
-                themeButton.setAttribute('aria-label', isDark ? 'Açık temaya geç' : 'Koyu temaya geç');
-                themeButton.setAttribute('title', isDark ? 'Açık temaya geç' : 'Koyu temaya geç');
+                var label = isDark ? themeButton.dataset.lightLabel : themeButton.dataset.darkLabel;
+                themeButton.setAttribute('aria-label', label);
+                themeButton.setAttribute('title', label);
                 themeButton.innerHTML = isDark ? '<i class="bi bi-sun-fill"></i>' : '<i class="bi bi-moon-stars-fill"></i>';
-            }
+            });
         }
         function temaSec(tema) {
             localStorage.setItem('tema', tema);
             temaUygula(tema);
         }
         document.addEventListener('DOMContentLoaded', function() {
-            var themeButton = document.getElementById('themeToggleBtn');
-            if (themeButton) {
+            var themeButtons = document.querySelectorAll('[data-theme-toggle]');
+            themeButtons.forEach(function(themeButton) {
                 themeButton.addEventListener('click', function() {
                     var mevcutTema = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
                     temaSec(mevcutTema);
                 });
-            }
+            });
             var kayitliTema = localStorage.getItem('tema') || 'light';
             temaUygula(kayitliTema);
         });

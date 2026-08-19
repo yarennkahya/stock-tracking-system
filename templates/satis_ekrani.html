@@ -1,72 +1,187 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% block title %}Satış Ekranı{% endblock %}
 
 {% block content %}
+<style>
+    .sale-search-input { min-height: 56px; font-size: 1.1rem; }
+    .sale-results { max-height: 510px; overflow-y: auto; }
+    .sale-result { display: flex; align-items: center; gap: 1rem; padding: 1rem; border-bottom: 1px solid #E5E7E4; }
+    .sale-result:last-child { border-bottom: 0; }
+    .sale-result-name { font-weight: 700; color: var(--color-ink); }
+    .sale-result-meta { color: var(--color-steel); font-size: .85rem; }
+    .sale-result-price { color: var(--color-accent); font-weight: 700; white-space: nowrap; }
+    .cart-card { position: sticky; top: 5.2rem; }
+    .cart-line { display: grid; grid-template-columns: 1fr auto; gap: .65rem; align-items: center; padding: .85rem 0; border-bottom: 1px solid #E5E7E4; }
+    .cart-line-name { color: var(--color-ink); font-weight: 700; line-height: 1.35; }
+    .cart-line-price { color: var(--color-steel); font-size: .85rem; }
+    .quantity-controls { display: inline-flex; align-items: center; gap: .3rem; }
+    .quantity-controls button { width: 30px; height: 30px; padding: 0; }
+    .cart-total { border-top: 2px solid var(--color-accent); margin-top: 1rem; padding-top: 1rem; }
+    [data-theme="dark"] .sale-result, [data-theme="dark"] .cart-line { border-color: #34383E; }
+    @media (max-width: 991.98px) { .cart-card { position: static; } }
+</style>
+
 <div class="page-header">
-    <div class="page-header-icon"><i class="bi bi-cash-coin"></i></div>
-    <div>
-        <h1>Satış Ekranı</h1>
-        <p class="page-header-sub">Barkod okutarak hızlı satış yap</p>
-    </div>
-</div>
-<div class="card mb-4">
-    <div class="card-body">
-        <div class="input-group">
-            <input type="text" id="barkodInput" class="form-control" placeholder="Barkod okut ya da yaz, Enter'a bas" autofocus>
-            <button class="btn btn-primary" onclick="barkodEkle()">Ekle</button>
+    <div class="d-flex" style="gap: var(--space-4);">
+        <div class="page-header-icon"><i class="bi bi-cash-coin"></i></div>
+        <div>
+            <h1>Satış Ekranı</h1>
+            <p class="page-header-sub">Ürün adıyla ara veya barkod okutarak doğrudan sepete ekle</p>
         </div>
-        <div id="hataMesaji" class="alert alert-danger mt-3" style="display:none;"></div>
     </div>
 </div>
 
-<table class="table">
-    <thead>
-        <tr><th>Ürün</th><th>Miktar</th><th>Birim Fiyat</th><th>Toplam</th><th></th></tr>
-    </thead>
-    <tbody>
-        {% for u in sepet_urunleri %}
-        <tr>
-            <td>{{ u.ad }}</td>
-            <td>{{ u.miktar }}</td>
-            <td>{{ u.birim_fiyat }} ₺</td>
-            <td>{{ u.satir_toplam }} ₺</td>
-            <td><a href="/satis/sil/{{ u.urun_id }}/" class="btn btn-sm btn-outline-danger">Sil</a></td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="5">Sepet boş, barkod okutarak başlayın.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card mb-4">
+            <div class="card-body">
+                <label class="form-label" for="urunAramaInput">Ürün ara veya barkod okut</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" id="urunAramaInput" class="form-control sale-search-input" placeholder="Örn. klozet, batarya veya barkod numarası" autocomplete="off" autofocus>
+                </div>
+                <div class="form-text">İsmi yazdıkça ürünler listelenir. Barkod okuyucu ile okutulan ürün doğrudan sepete eklenir.</div>
+                <div id="aramaHatasi" class="alert alert-danger mt-3 mb-0 d-none" role="alert"></div>
+            </div>
+        </div>
 
-<h3 class="text-end">Toplam: {{ toplam }} ₺</h3>
+        <div class="card">
+            <div class="card-body p-0">
+                <div id="aramaBos" class="p-4 text-secondary">Satışa eklemek için ürün adı yazın veya barkod okutun.</div>
+                <div id="aramaSonuclari" class="sale-results"></div>
+            </div>
+        </div>
+    </div>
 
-<form method="post" action="{% url 'satisi_tamamla' %}" class="text-end">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-primary btn-lg" {% if not sepet_urunleri %}disabled{% endif %}>Satışı Tamamla</button>
-</form>
+    <div class="col-lg-5">
+        <div class="card cart-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h2 class="h5 mb-0"><i class="bi bi-cart3"></i> Sepet</h2>
+                    <span id="sepetAdet" class="badge text-bg-secondary">0 ürün</span>
+                </div>
+                <div id="sepetSatirlari"></div>
+                <div id="sepetBos" class="text-secondary py-4 text-center">Sepetiniz boş.</div>
+                <div class="cart-total d-flex justify-content-between align-items-end">
+                    <span class="fw-semibold">Toplam</span>
+                    <strong id="sepetToplam" class="fs-4">0,00 ₺</strong>
+                </div>
+                <form method="post" action="{% url 'satisi_tamamla' %}" class="mt-3">
+                    {% csrf_token %}
+                    <button id="satisTamamlaBtn" type="submit" class="btn btn-primary btn-lg w-100" disabled><i class="bi bi-check2-circle"></i> Satışı tamamla</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
+{{ sepet|json_script:"sepet-verisi" }}
 <script>
-    function barkodEkle() {
-    const barkod = document.getElementById('barkodInput').value.trim();
-    if (!barkod) return;
+const urunAramaInput = document.getElementById('urunAramaInput');
+const aramaSonuclari = document.getElementById('aramaSonuclari');
+const aramaBos = document.getElementById('aramaBos');
+const aramaHatasi = document.getElementById('aramaHatasi');
+const sepetSatirlari = document.getElementById('sepetSatirlari');
+const sepetBos = document.getElementById('sepetBos');
+const sepetAdet = document.getElementById('sepetAdet');
+const sepetToplam = document.getElementById('sepetToplam');
+const satisTamamlaBtn = document.getElementById('satisTamamlaBtn');
+const csrfToken = '{{ csrf_token }}';
+const urunAraUrl = '{% url "urun_ara" %}';
+const barkodEkleUrl = '{% url "sepete_barkod_ekle" %}';
+const urunEkleUrl = '{% url "sepete_urun_ekle" 0 %}'.replace('/0/', '/{urunId}/');
+const sepetGuncelleUrl = '{% url "sepet_kalemi_guncelle" 0 %}'.replace('/0/', '/{urunId}/');
+let sepet = JSON.parse(document.getElementById('sepet-verisi').textContent);
+let aramaBekleme, barkodBekleme, sonAramaNumarasi = 0;
 
-    document.getElementById('hataMesaji').style.display = 'none';
-
-    fetch(`/satis/barkod-ekle/${barkod}/`)
-        .then(res => res.json().then(data => ({ status: res.status, data })))
-        .then(({ status, data }) => {
-            if (data.basarili) {
-                location.reload();
-            } else {
-                document.getElementById('hataMesaji').innerText = data.hata || 'Bir hata oluştu.';
-                document.getElementById('hataMesaji').style.display = 'block';
-            }
-        })
-        .catch(err => {
-            document.getElementById('hataMesaji').innerText = 'Beklenmeyen bir hata oluştu: ' + err;
-            document.getElementById('hataMesaji').style.display = 'block';
-            console.error(err);
-        });
+function paraYaz(deger) {
+    return `${Number(deger).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ₺`;
 }
+function hataGoster(mesaj) {
+    aramaHatasi.textContent = mesaj; aramaHatasi.classList.remove('d-none');
+}
+function hataGizle() { aramaHatasi.classList.add('d-none'); }
+function sepetiCiz() {
+    sepetSatirlari.replaceChildren();
+    sepetBos.classList.toggle('d-none', sepet.kalemler.length > 0);
+    satisTamamlaBtn.disabled = sepet.kalemler.length === 0;
+    sepetAdet.textContent = `${sepet.toplam_adet} ürün`;
+    sepetToplam.textContent = paraYaz(sepet.toplam);
+    sepet.kalemler.forEach(kalem => {
+        const satir = document.createElement('div'); satir.className = 'cart-line';
+        const bilgi = document.createElement('div');
+        const ad = document.createElement('div'); ad.className = 'cart-line-name'; ad.textContent = kalem.ad;
+        const fiyat = document.createElement('div'); fiyat.className = 'cart-line-price'; fiyat.textContent = `${paraYaz(kalem.birim_fiyat)} × ${kalem.miktar} = ${paraYaz(kalem.satir_toplam)}`;
+        bilgi.append(ad, fiyat);
+        const kontroller = document.createElement('div'); kontroller.className = 'quantity-controls';
+        [['azalt', 'bi-dash-lg', 'Azalt'], ['artir', 'bi-plus-lg', 'Artır'], ['sil', 'bi-trash', 'Sil']].forEach(([islem, ikon, etiket]) => {
+            const dugme = document.createElement('button'); dugme.type = 'button'; dugme.className = islem === 'sil' ? 'btn btn-sm btn-outline-danger ms-1' : 'btn btn-sm btn-outline-primary';
+            dugme.dataset.sepetIslem = islem; dugme.dataset.urunId = kalem.urun_id; dugme.setAttribute('aria-label', etiket); dugme.innerHTML = `<i class="bi ${ikon}"></i>`; kontroller.appendChild(dugme);
+        });
+        satir.append(bilgi, kontroller); sepetSatirlari.appendChild(satir);
+    });
+}
+function aramaSonuclariniCiz(sonuclar) {
+    aramaSonuclari.replaceChildren();
+    aramaBos.classList.toggle('d-none', sonuclar.length > 0);
+    if (!sonuclar.length && urunAramaInput.value.trim()) { aramaBos.textContent = 'Eşleşen ürün bulunamadı.'; }
+    sonuclar.forEach(urun => {
+        const satir = document.createElement('div'); satir.className = 'sale-result';
+        const bilgi = document.createElement('div'); bilgi.className = 'flex-grow-1';
+        const ad = document.createElement('div'); ad.className = 'sale-result-name'; ad.textContent = urun.ad;
+        const meta = document.createElement('div'); meta.className = 'sale-result-meta'; meta.textContent = `${urun.kategori} · Stok: ${urun.stok_miktari}${urun.barkodlar.length ? ` · ${urun.barkodlar[0]}` : ''}`;
+        bilgi.append(ad, meta);
+        const fiyat = document.createElement('div'); fiyat.className = 'sale-result-price'; fiyat.textContent = paraYaz(urun.satis_fiyati);
+        const dugme = document.createElement('button'); dugme.type = 'button'; dugme.className = 'btn btn-primary btn-sm'; dugme.dataset.urunEkle = urun.id; dugme.innerHTML = '<i class="bi bi-plus-lg"></i> Ekle';
+        if (urun.stok_miktari < 1) { dugme.disabled = true; dugme.textContent = 'Stok yok'; }
+        satir.append(bilgi, fiyat, dugme); aramaSonuclari.appendChild(satir);
+    });
+}
+async function istekYap(url, veri) {
+    const yanit = await fetch(url, {method: 'POST', headers: {'X-CSRFToken': csrfToken, 'Content-Type': 'application/x-www-form-urlencoded'}, body: new URLSearchParams(veri)});
+    const data = await yanit.json();
+    if (!yanit.ok || !data.basarili) throw new Error(data.hata || 'İşlem gerçekleştirilemedi.');
+    return data;
+}
+async function urunuSepeteEkle(urunId, aramayiTemizle = false) {
+    try {
+        const data = await istekYap(urunEkleUrl.replace('{urunId}', urunId), {}); sepet = data.sepet; sepetiCiz(); hataGizle();
+        if (aramayiTemizle) { urunAramaInput.value = ''; aramaSonuclari.replaceChildren(); aramaBos.classList.remove('d-none'); aramaBos.textContent = 'Satışa eklemek için ürün adı yazın veya barkod okutun.'; }
+        urunAramaInput.focus();
+    } catch (error) { hataGoster(error.message); }
+}
+async function barkoduSepeteEkle(barkod) {
+    try {
+        const data = await istekYap(barkodEkleUrl, {barkod_no: barkod}); sepet = data.sepet; sepetiCiz(); hataGizle();
+        urunAramaInput.value = ''; aramaSonuclari.replaceChildren(); aramaBos.classList.remove('d-none'); aramaBos.textContent = 'Satışa eklemek için ürün adı yazın veya barkod okutun.'; urunAramaInput.focus();
+    } catch (error) { hataGoster(error.message); }
+}
+async function urunAra(sorgu, otomatikBarkod) {
+    const aramaNumarasi = ++sonAramaNumarasi;
+    try {
+        const yanit = await fetch(`${urunAraUrl}?q=${encodeURIComponent(sorgu)}`); const data = await yanit.json();
+        if (aramaNumarasi !== sonAramaNumarasi || urunAramaInput.value.trim() !== sorgu) return;
+        aramaSonuclariniCiz(data.sonuclar);
+        if (otomatikBarkod && data.tam_barkod_urun_id) await urunuSepeteEkle(data.tam_barkod_urun_id, true);
+    } catch (_) { hataGoster('Ürün araması yapılamadı.'); }
+}
+urunAramaInput.addEventListener('input', () => {
+    clearTimeout(aramaBekleme); clearTimeout(barkodBekleme); hataGizle();
+    const sorgu = urunAramaInput.value.trim();
+    if (!sorgu) { aramaSonuclari.replaceChildren(); aramaBos.classList.remove('d-none'); aramaBos.textContent = 'Satışa eklemek için ürün adı yazın veya barkod okutun.'; return; }
+    aramaBekleme = setTimeout(() => urunAra(sorgu, false), 160);
+    if (/^\d{4,}$/.test(sorgu)) barkodBekleme = setTimeout(() => urunAra(sorgu, true), 420);
+});
+urunAramaInput.addEventListener('keydown', event => {
+    if (event.key === 'Enter') { event.preventDefault(); clearTimeout(barkodBekleme); barkoduSepeteEkle(urunAramaInput.value.trim()); }
+});
+aramaSonuclari.addEventListener('click', event => { const dugme = event.target.closest('[data-urun-ekle]'); if (dugme) urunuSepeteEkle(dugme.dataset.urunEkle); });
+sepetSatirlari.addEventListener('click', async event => {
+    const dugme = event.target.closest('[data-sepet-islem]'); if (!dugme) return;
+    try { const data = await istekYap(sepetGuncelleUrl.replace('{urunId}', dugme.dataset.urunId), {islem: dugme.dataset.sepetIslem}); sepet = data.sepet; sepetiCiz(); hataGizle(); }
+    catch (error) { hataGoster(error.message); }
+});
+sepetiCiz();
 </script>
 {% endblock %}

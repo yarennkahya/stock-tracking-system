@@ -69,6 +69,82 @@ msgstr "Dark"
 msgid "Çıkış Yap"
 msgstr "Log out"
 
+#: templates/partials/language_menu.html:5 templates/partials/language_menu.html:12
+msgid "Dil seçimi"
+msgstr "Language selection"
+
+#: templates/partials/language_menu.html:21 templates/partials/language_menu.html:32
+msgid "Seçili"
+msgstr "Selected"
+
+#: templates/partials/account_menu.html:3
+msgid "Hesap menüsünü aç"
+msgstr "Open account menu"
+
+#: accounts/forms.py:42
+msgid "Kullanıcı adı"
+msgstr "Username"
+
+#: accounts/forms.py:43
+msgid "Ad"
+msgstr "First name"
+
+#: accounts/forms.py:44
+msgid "Soyad"
+msgstr "Last name"
+
+#: accounts/forms.py:45
+msgid "E-posta adresi"
+msgstr "Email address"
+
+#: accounts/forms.py:62
+msgid "Bu e-posta adresi başka bir hesap tarafından kullanılıyor."
+msgstr "This email address is already used by another account."
+
+#: accounts/views.py:35
+msgid "Hesap bilgileriniz güncellendi."
+msgstr "Your account details have been updated."
+
+#: templates/hesap_ayarlari.html:4 templates/hesap_ayarlari.html:12 templates/partials/account_menu.html:17
+msgid "Hesap Ayarları"
+msgstr "Account settings"
+
+#: templates/hesap_ayarlari.html:13
+msgid "Profil bilgilerinizi güncelleyin"
+msgstr "Update your profile information"
+
+#: templates/hesap_ayarlari.html:20
+msgid "Kişisel bilgiler"
+msgstr "Personal information"
+
+#: templates/hesap_ayarlari.html:21
+msgid "Bu bilgiler sağ üstteki kullanıcı alanında görüntülenir."
+msgstr "This information is displayed in the user area at the top right."
+
+#: templates/hesap_ayarlari.html:51
+msgid "Değişiklikleri Kaydet"
+msgstr "Save changes"
+
+#: templates/partials/language_menu.html:7
+msgid "Türkçeye geç"
+msgstr "Switch to Turkish"
+
+#: templates/partials/language_menu.html:9
+msgid "İngilizceye geç"
+msgstr "Switch to English"
+
+#: templates/partials/theme_toggle.html:2
+msgid "Koyu temaya geç"
+msgstr "Switch to dark theme"
+
+#: templates/partials/theme_toggle.html:2
+msgid "Açık temaya geç"
+msgstr "Switch to light theme"
+
+#: templates/partials/account_menu.html:22
+msgid "Dil"
+msgstr "Language"
+
 #: templates/partials/sidebar_nav.html:10
 msgid "Satış Ekranı"
 msgstr "Sales Screen"

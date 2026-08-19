@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Üye Ol{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card mt-4">
+            <div class="card-body">
+                <h2 class="mb-2">Üye Ol</h2>
+                <p class="text-secondary mb-4">Hesabınızı oluşturup stok takibine başlayın.</p>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text|safe }}</div>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary w-100">Hesap oluştur</button>
+                </form>
+                <p class="text-center mt-3 mb-0 small">
+                    Zaten hesabınız var mı? <a href="{% url 'login' %}">Giriş yapın</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Hesap Ayarları" %}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex" style="gap: var(--space-4);">
+        <div class="page-header-icon"><i class="bi bi-person-gear"></i></div>
+        <div>
+            <h1>{% trans "Hesap Ayarları" %}</h1>
+            <p class="page-header-sub">{% trans "Profil bilgilerinizi güncelleyin" %}</p>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="max-width: 680px;">
+    <div class="card-body">
+        <h2 class="h5 mb-1">{% trans "Kişisel bilgiler" %}</h2>
+        <p class="text-secondary mb-4">{% trans "Bu bilgiler sağ üstteki kullanıcı alanında görüntülenir." %}</p>
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label" for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
+                    {{ form.first_name }}
+                    {% for error in form.first_name.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label" for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>
+                    {{ form.last_name }}
+                    {% for error in form.last_name.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
+                {{ form.username }}
+                {% for error in form.username.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="mb-4">
+                <label class="form-label" for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+                {{ form.email }}
+                {% for error in form.email.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-lg"></i> {% trans "Değişiklikleri Kaydet" %}
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

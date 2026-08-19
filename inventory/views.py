@@ -59,7 +59,7 @@ def urun_ekle(request):
         form = UrunForm(initial={'barkod_no': onceki_barkod})
     return render(request, 'urun_ekle.html', {'form': form})
 
-    @login_required
+@login_required
 def hizli_urun_ekle(request):
     kategoriler = Kategori.objects.all()
     return render(request, 'hizli_urun_ekle.html', {'kategoriler': kategoriler})

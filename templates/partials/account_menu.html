@@ -1,19 +1,36 @@
 {% load i18n %}
 <div class="dropdown">
-    <button class="account-trigger dropdown-toggle" type="button" data-bs-toggle="dropdown">
+    <button class="account-trigger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-label="{% trans 'Hesap menüsünü aç' %}">
         <span class="account-avatar">{{ user.username|slice:":1"|upper }}</span>
-        <span class="account-name-inline d-none d-lg-inline">{{ user.username }}</span>
+        <span class="account-name-inline d-none d-lg-inline">{{ user.get_full_name|default:user.username }}</span>
     </button>
-    <ul class="dropdown-menu dropdown-menu-end p-2" style="min-width: 210px;">
-        <li class="px-2 pb-2 mb-2 border-bottom">
-            <div class="fw-semibold">{{ user.username }}</div>
+    <ul class="dropdown-menu dropdown-menu-end account-menu">
+        <li class="account-menu-summary">
+            <span class="account-menu-avatar">{{ user.username|slice:":1"|upper }}</span>
+            <div class="min-w-0">
+                <div class="account-menu-name text-truncate">{{ user.get_full_name|default:user.username }}</div>
+                <div class="account-menu-username text-truncate">@{{ user.username }}</div>
+            </div>
         </li>
-        <li class="px-2 pb-2 text-center">
-            <button type="button" id="themeToggleBtn" class="theme-toggle" aria-label="Koyu temaya geç" title="Koyu temaya geç">
-                <i class="bi bi-moon-stars-fill"></i>
-            </button>
+        <li><hr class="dropdown-divider my-2"></li>
+        <li>
+            <a class="dropdown-item account-menu-link" href="{% url 'hesap_ayarlari' %}">
+                <i class="bi bi-person-gear"></i> {% trans "Hesap Ayarları" %}
+            </a>
         </li>
-        <li class="px-2 pt-2 border-top">
+        <li><hr class="dropdown-divider my-2"></li>
+        <li class="account-menu-preferences">
+            <div class="account-menu-preference">
+                <span><i class="bi bi-translate me-1"></i> {% trans "Dil" %}</span>
+                {% include 'partials/language_menu.html' %}
+            </div>
+            <div class="account-menu-preference">
+                <span><i class="bi bi-circle-half me-1"></i> {% trans "Tema" %}</span>
+                {% include 'partials/theme_toggle.html' %}
+            </div>
+        </li>
+        <li><hr class="dropdown-divider my-2"></li>
+        <li class="px-2 pt-1">
             <form method="post" action="{% url 'logout' %}">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-outline-primary btn-sm w-100">

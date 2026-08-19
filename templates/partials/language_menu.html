@@ -1,0 +1,11 @@
+{% load i18n %}
+{% get_current_language as CURRENT_LANGUAGE %}
+<form class="lang-switch" action="{% url 'set_language' %}" method="post">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    {% if CURRENT_LANGUAGE == 'en' %}
+        <button type="submit" name="language" value="tr" class="language-toggle" aria-label="{% trans 'Türkçeye geç' %}" title="{% trans 'Türkçeye geç' %}">TR</button>
+    {% else %}
+        <button type="submit" name="language" value="en" class="language-toggle" aria-label="{% trans 'İngilizceye geç' %}" title="{% trans 'İngilizceye geç' %}">EN</button>
+    {% endif %}
+</form>

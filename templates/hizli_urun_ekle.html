@@ -5,84 +5,74 @@
 {% block content %}
 <div class="page-header">
     <div class="d-flex" style="gap: var(--space-4);">
-        <div class="page-header-icon"><i class="bi bi-lightning-charge"></i></div>
+        <div class="page-header-icon"><i class="bi bi-box-seam"></i></div>
         <div>
             <h1>{% trans "Hızlı Ürün Ekle" %}</h1>
-            <p class="page-header-sub">{% trans "Barkod okut, bilgileri doldur, sıradaki barkoda hazır ol" %}</p>
+            <p class="page-header-sub">Barkod okuyucu ile ürün tanımla veya bilgileri elle gir</p>
         </div>
     </div>
 </div>
 
-<div class="card mb-4">
+<div class="segmented mb-4" role="tablist" aria-label="Ürün ekleme yöntemi">
+    <button type="button" id="barkodSekmesi" class="active" role="tab"><i class="bi bi-upc-scan"></i> Barkod okut</button>
+    <button type="button" id="manuelSekmesi" role="tab"><i class="bi bi-pencil-square"></i> Manuel ekle</button>
+</div>
+
+<div id="barkodPaneli" class="card mb-4">
     <div class="card-body">
-        <label class="form-label">{% trans "Barkod" %}</label>
-        <input type="text" id="barkodInput" class="form-control form-control-lg" placeholder="{% trans 'Barkodu okut ya da yaz, Enter’a bas' %}" autofocus>
+        <label class="form-label" for="barkodInput">Barkod okut veya numarayı yaz</label>
+        <input type="text" id="barkodInput" class="form-control form-control-lg" placeholder="Okuyucuyu bu alana tutun" autocomplete="off" autofocus>
+        <div class="form-text">USB barkod okuyucu klavye gibi çalışır; kod okununca ürün otomatik kontrol edilir.</div>
     </div>
 </div>
 
-<div id="mevcutUyari" class="alert alert-warning d-none align-items-center justify-content-between">
+<div id="mevcutUyari" class="alert alert-warning d-none align-items-center justify-content-between gap-3">
     <span id="mevcutMetin"></span>
-    <button type="button" class="btn btn-sm btn-primary" id="stokArtirBtn"><i class="bi bi-plus-lg"></i> {% trans "Stoğa 1 Ekle" %}</button>
+    <button type="button" class="btn btn-sm btn-primary flex-shrink-0" id="stokArtirBtn"><i class="bi bi-plus-lg"></i> Stoğa 1 ekle</button>
 </div>
 
 <div id="yeniUrunKart" class="card mb-4 d-none">
     <div class="card-body">
-        <h5 class="mb-3"><i class="bi bi-plus-circle"></i> {% trans "Yeni Ürün — Bilgileri Doldur" %}</h5>
-        <div class="mb-3">
-            <label class="form-label">{% trans "Barkod" %}</label>
-            <input type="text" id="formBarkod" class="form-control" readonly>
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h2 class="h5 mb-0"><i class="bi bi-plus-circle"></i> <span id="urunFormBasligi">Yeni ürün bilgileri</span></h2>
+            <button type="button" id="formuKapatBtn" class="btn btn-sm btn-outline-secondary">Vazgeç</button>
         </div>
         <div class="mb-3">
-            <label class="form-label">{% trans "Kategori" %}</label>
+            <label class="form-label" for="formBarkod">Barkod <span class="text-secondary">(opsiyonel)</span></label>
+            <input type="text" id="formBarkod" class="form-control" autocomplete="off">
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="formKategori">Kategori</label>
             <select id="formKategori" class="form-select">
-                {% for k in kategoriler %}
-                <option value="{{ k.id }}">{{ k.ad }}</option>
-                {% endfor %}
+                {% for k in kategoriler %}<option value="{{ k.id }}">{{ k.ad }}</option>{% empty %}<option value="">Önce bir kategori ekleyin</option>{% endfor %}
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">{% trans "Ürün Adı" %}</label>
-            <input type="text" id="formAd" class="form-control" placeholder="{% trans 'örn. Matkap 13mm' %}">
+            <label class="form-label" for="formAd">Ürün adı</label>
+            <input type="text" id="formAd" class="form-control" placeholder="Örn. 50 mm PVC dirsek">
         </div>
         <div class="row">
-            <div class="col-4 mb-3">
-                <label class="form-label">{% trans "Alış Fiyatı" %}</label>
-                <input type="number" step="0.01" id="formAlisFiyati" class="form-control" value="0">
-            </div>
-            <div class="col-4 mb-3">
-                <label class="form-label">{% trans "Satış Fiyatı" %}</label>
-                <input type="number" step="0.01" id="formSatisFiyati" class="form-control" value="0">
-            </div>
-            <div class="col-4 mb-3">
-                <label class="form-label">{% trans "Stok Miktarı" %}</label>
-                <input type="number" id="formStokMiktari" class="form-control" value="1">
-            </div>
+            <div class="col-md-4 mb-3"><label class="form-label" for="formAlisFiyati">Alış fiyatı</label><input type="number" step="0.01" min="0" id="formAlisFiyati" class="form-control" value="0"></div>
+            <div class="col-md-4 mb-3"><label class="form-label" for="formSatisFiyati">Satış fiyatı</label><input type="number" step="0.01" min="0" id="formSatisFiyati" class="form-control" value="0"></div>
+            <div class="col-md-4 mb-3"><label class="form-label" for="formStokMiktari">İlk stok miktarı</label><input type="number" min="0" id="formStokMiktari" class="form-control" value="1"></div>
         </div>
         <div id="formHata" class="alert alert-danger d-none"></div>
-        <button type="button" class="btn btn-primary w-100" id="urunKaydetBtn"><i class="bi bi-check-lg"></i> {% trans "Kaydet ve Sıradaki Barkoda Geç" %}</button>
+        <button type="button" class="btn btn-primary w-100" id="urunKaydetBtn"><i class="bi bi-check-lg"></i> Ürünü kaydet</button>
     </div>
 </div>
 
 <div class="card">
     <div class="card-body">
-        <h5 class="mb-3"><i class="bi bi-list-check"></i> {% trans "Bu Oturumda Eklenenler" %} (<span id="eklenenSayac">0</span>)</h5>
-        <table class="table">
-            <thead>
-                <tr><th>{% trans "Ürün" %}</th><th>{% trans "Barkod" %}</th><th>{% trans "Stok" %}</th></tr>
-            </thead>
-            <tbody id="eklenenTbody">
-                <tr id="eklenenBos"><td colspan="3">{% trans "Henüz ürün eklenmedi." %}</td></tr>
-            </tbody>
-        </table>
+        <h2 class="h5 mb-3"><i class="bi bi-list-check"></i> Bu oturumda eklenenler (<span id="eklenenSayac">0</span>)</h2>
+        <div class="table-responsive"><table class="table mb-0"><thead><tr><th>Ürün</th><th>Barkod</th><th>İlk stok</th></tr></thead><tbody id="eklenenTbody"><tr id="eklenenBos"><td colspan="3">Henüz ürün eklenmedi.</td></tr></tbody></table></div>
     </div>
 </div>
 
 <script>
-let sonKategoriId = null;
-let eklenenSayisi = 0;
-let mevcutUrunId = null;
-
 const barkodInput = document.getElementById('barkodInput');
+const barkodPaneli = document.getElementById('barkodPaneli');
+const barkodSekmesi = document.getElementById('barkodSekmesi');
+const manuelSekmesi = document.getElementById('manuelSekmesi');
 const mevcutUyari = document.getElementById('mevcutUyari');
 const mevcutMetin = document.getElementById('mevcutMetin');
 const stokArtirBtn = document.getElementById('stokArtirBtn');
@@ -94,116 +84,55 @@ const formAlisFiyati = document.getElementById('formAlisFiyati');
 const formSatisFiyati = document.getElementById('formSatisFiyati');
 const formStokMiktari = document.getElementById('formStokMiktari');
 const formHata = document.getElementById('formHata');
+let mevcutUrunId = null, eklenenSayisi = 0, barkodBekleme, barkodIsleniyor = false;
 
 function panelleriGizle() {
-    mevcutUyari.classList.add('d-none');
-    mevcutUyari.classList.remove('d-flex');
-    yeniUrunKart.classList.add('d-none');
-    formHata.classList.add('d-none');
+    mevcutUyari.classList.add('d-none'); mevcutUyari.classList.remove('d-flex');
+    yeniUrunKart.classList.add('d-none'); formHata.classList.add('d-none');
 }
-
+function urunFormunuAc(barkod) {
+    formBarkod.value = barkod; formAd.value = ''; formAlisFiyati.value = '0'; formSatisFiyati.value = '0'; formStokMiktari.value = '1';
+    yeniUrunKart.classList.remove('d-none'); formHata.classList.add('d-none');
+    document.getElementById('urunFormBasligi').innerText = barkod ? 'Barkod için yeni ürün' : 'Manuel ürün girişi'; formAd.focus();
+}
+function sekmeSec(sekme) {
+    const barkodModu = sekme === 'barkod'; barkodSekmesi.classList.toggle('active', barkodModu); manuelSekmesi.classList.toggle('active', !barkodModu);
+    barkodPaneli.classList.toggle('d-none', !barkodModu); panelleriGizle();
+    if (barkodModu) { barkodInput.value = ''; barkodInput.focus(); } else { urunFormunuAc(''); }
+}
+function barkoduIsle(barkod) {
+    if (!barkod || barkodIsleniyor) return;
+    barkodIsleniyor = true; panelleriGizle();
+    fetch(`/api/urun-kontrol/${encodeURIComponent(barkod)}/`).then(res => res.json()).then(data => {
+        if (data.bulundu) {
+            mevcutUrunId = data.urun_id; mevcutMetin.innerText = `Bu barkod ${data.ad} ürününe ait. Mevcut stok: ${data.stok_miktari}`;
+            mevcutUyari.classList.remove('d-none'); mevcutUyari.classList.add('d-flex');
+        } else { urunFormunuAc(barkod); }
+    }).catch(() => { formHata.innerText = 'Barkod kontrolü yapılamadı. Tekrar deneyin.'; formHata.classList.remove('d-none'); })
+      .finally(() => { barkodInput.value = ''; barkodIsleniyor = false; });
+}
+barkodInput.addEventListener('input', () => { clearTimeout(barkodBekleme); const barkod = barkodInput.value.trim(); if (barkod.length >= 4) barkodBekleme = setTimeout(() => barkoduIsle(barkod), 350); });
+barkodInput.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); clearTimeout(barkodBekleme); barkoduIsle(barkodInput.value.trim()); } });
+stokArtirBtn.addEventListener('click', () => {
+    fetch(`/api/stok-artir/${mevcutUrunId}/`, {method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token }}'}}).then(res => res.json()).then(data => {
+        if (!data.basarili) throw new Error(); panelleriGizle(); barkodInput.focus();
+    }).catch(() => { mevcutMetin.innerText = 'Stok artırılamadı. Tekrar deneyin.'; });
+});
 function eklenenListeyeEkle(ad, barkod, stok) {
-    document.getElementById('eklenenBos')?.remove();
-    const tbody = document.getElementById('eklenenTbody');
-    const satir = document.createElement('tr');
-    satir.innerHTML = `<td>${ad}</td><td>${barkod || '-'}</td><td>${stok}</td>`;
-    tbody.prepend(satir);
-    eklenenSayisi++;
-    document.getElementById('eklenenSayac').innerText = eklenenSayisi;
+    document.getElementById('eklenenBos')?.remove(); const satir = document.createElement('tr');
+    [ad, barkod || '-', stok].forEach(deger => { const hucre = document.createElement('td'); hucre.textContent = deger; satir.appendChild(hucre); });
+    document.getElementById('eklenenTbody').prepend(satir); document.getElementById('eklenenSayac').innerText = ++eklenenSayisi;
 }
-
-barkodInput.addEventListener('keypress', function(e) {
-    if (e.key !== 'Enter') return;
-    e.preventDefault();
-    const barkod = barkodInput.value.trim();
-    if (!barkod) return;
-
-    panelleriGizle();
-
-    fetch(`/api/urun-kontrol/${encodeURIComponent(barkod)}/`)
-        .then(res => res.json())
-        .then(data => {
-            if (data.bulundu) {
-                mevcutUrunId = data.urun_id;
-                mevcutMetin.innerText = `Bu ürün zaten kayıtlı: ${data.ad} (mevcut stok: ${data.stok_miktari})`;
-                mevcutUyari.classList.remove('d-none');
-                mevcutUyari.classList.add('d-flex');
-            } else {
-                formBarkod.value = barkod;
-                formAd.value = '';
-                formAlisFiyati.value = '0';
-                formSatisFiyati.value = '0';
-                formStokMiktari.value = '1';
-                if (sonKategoriId) formKategori.value = sonKategoriId;
-                yeniUrunKart.classList.remove('d-none');
-                formAd.focus();
-            }
-        })
-        .catch(err => console.error(err));
-
-    barkodInput.value = '';
-});
-
-stokArtirBtn.addEventListener('click', function() {
-    fetch(`/api/stok-artir/${mevcutUrunId}/`, {
-        method: 'POST',
-        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.basarili) {
-            panelleriGizle();
-            barkodInput.focus();
-        }
-    });
-});
-
 function urunKaydet() {
-    if (!formAd.value.trim()) {
-        formHata.innerText = 'Ürün adı zorunlu.';
-        formHata.classList.remove('d-none');
-        formAd.focus();
-        return;
-    }
-
-    const veriler = new URLSearchParams();
-    veriler.append('barkod_no', formBarkod.value);
-    veriler.append('ad', formAd.value.trim());
-    veriler.append('kategori_id', formKategori.value);
-    veriler.append('alis_fiyati', formAlisFiyati.value || 0);
-    veriler.append('satis_fiyati', formSatisFiyati.value || 0);
-    veriler.append('stok_miktari', formStokMiktari.value || 1);
-
-    fetch('{% url "hizli_urun_kaydet" %}', {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': '{{ csrf_token }}',
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: veriler.toString()
-    })
-    .then(res => res.json().then(data => ({ status: res.status, data })))
-    .then(({ status, data }) => {
-        if (data.basarili) {
-            sonKategoriId = data.kategori_id;
-            eklenenListeyeEkle(data.ad, formBarkod.value, formStokMiktari.value);
-            panelleriGizle();
-            barkodInput.focus();
-        } else {
-            formHata.innerText = data.hata || 'Bir hata oluştu.';
-            formHata.classList.remove('d-none');
-        }
-    })
-    .catch(err => {
-        formHata.innerText = 'Beklenmeyen hata: ' + err;
-        formHata.classList.remove('d-none');
-    });
+    if (!formAd.value.trim() || !formKategori.value) { formHata.innerText = 'Ürün adı ve kategori zorunludur.'; formHata.classList.remove('d-none'); return; }
+    const veriler = new URLSearchParams({barkod_no: formBarkod.value.trim(), ad: formAd.value.trim(), kategori_id: formKategori.value, alis_fiyati: formAlisFiyati.value || 0, satis_fiyati: formSatisFiyati.value || 0, stok_miktari: formStokMiktari.value || 0});
+    fetch('{% url "hizli_urun_kaydet" %}', {method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/x-www-form-urlencoded'}, body: veriler.toString()})
+      .then(res => res.json().then(data => ({ok: res.ok, data}))).then(({ok, data}) => {
+          if (!ok || !data.basarili) throw new Error(data.hata || 'Ürün kaydedilemedi.');
+          eklenenListeyeEkle(data.ad, formBarkod.value.trim(), formStokMiktari.value || 0); sekmeSec('barkod');
+      }).catch(error => { formHata.innerText = error.message; formHata.classList.remove('d-none'); });
 }
-
-document.getElementById('urunKaydetBtn').addEventListener('click', urunKaydet);
-
-formStokMiktari.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') { e.preventDefault(); urunKaydet(); }
-});
+barkodSekmesi.addEventListener('click', () => sekmeSec('barkod')); manuelSekmesi.addEventListener('click', () => sekmeSec('manuel'));
+document.getElementById('formuKapatBtn').addEventListener('click', () => sekmeSec('barkod')); document.getElementById('urunKaydetBtn').addEventListener('click', urunKaydet);
 </script>
 {% endblock %}
