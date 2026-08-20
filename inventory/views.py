@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET
 from django.core.paginator import Paginator
 
-from .forms import AltKategoriFormu, UrunForm
+from .forms import AltKategoriFormu, KategoriFormu, UrunForm
 from .models import Barkod, Kategori, StokHareketi, Urun
 
 
@@ -208,6 +208,42 @@ def kategori_listesi(request):
         'ana_kategoriler': ana_kategoriler,
         'secili_ana_kategori': secili_ana_kategori,
         'alt_kategoriler': alt_kategoriler,
+    })
+
+
+@login_required
+def ana_kategori_ekle(request):
+    form = KategoriFormu(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        kategori = form.save(commit=False)
+        kategori.parent = None
+        kategori.save()
+        messages.success(request, f'{kategori.ad} ana kategorisi eklendi.')
+        return redirect(f'{reverse("kategori_listesi")}?ana_kategori={kategori.id}')
+    return render(request, 'kategori_formu.html', {
+        'form': form,
+        'sayfa_basligi': 'Ana Kategori Ekle',
+        'sayfa_aciklamasi': 'Ürün gruplarını düzenli yönetmek için yeni bir ana kategori oluşturun.',
+        'submit_etiketi': 'Ana Kategoriyi Kaydet',
+    })
+
+
+@login_required
+def kategori_duzenle(request, kategori_id):
+    kategori = get_object_or_404(Kategori, id=kategori_id)
+    form = KategoriFormu(request.POST or None, instance=kategori)
+    if request.method == 'POST' and form.is_valid():
+        kategori = form.save()
+        ana_kategori_id = kategori.parent_id or kategori.id
+        messages.success(request, 'Kategori bilgileri güncellendi.')
+        return redirect(f'{reverse("kategori_listesi")}?ana_kategori={ana_kategori_id}')
+    return render(request, 'kategori_formu.html', {
+        'form': form,
+        'kategori': kategori,
+        'sayfa_basligi': 'Kategori Düzenle',
+        'sayfa_aciklamasi': f'{kategori.tam_ad} kategorisinin adını ve açıklamasını güncelleyin.',
+        'submit_etiketi': 'Değişiklikleri Kaydet',
+        'geri_donus_url': f'{reverse("kategori_listesi")}?ana_kategori={kategori.parent_id or kategori.id}',
     })
 
 

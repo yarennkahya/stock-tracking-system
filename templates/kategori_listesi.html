@@ -8,15 +8,16 @@
         <div class="page-header-icon"><i class="bi bi-diagram-3"></i></div>
         <div>
             <h1>Kategoriler</h1>
-            <p class="page-header-sub">Önce ana kategoriyi seçin, ardından yalnızca o gruba alt kategori ekleyin</p>
+            <p class="page-header-sub">Ana kategorileri oluşturun, ardından alt kategorileri düzenleyin.</p>
         </div>
     </div>
+    <a href="{% url 'ana_kategori_ekle' %}" class="btn btn-primary ms-auto"><i class="bi bi-folder-plus"></i> Ana Kategori Ekle</a>
 </div>
 
 <div class="card mb-4">
     <div class="card-body">
         <form method="get" class="row align-items-end g-3">
-            <div class="col-md-7">
+            <div class="col-md-8">
                 <label class="form-label" for="anaKategori">Ana kategori</label>
                 <select class="form-select" id="anaKategori" name="ana_kategori" onchange="this.form.submit()">
                     <option value="">Ana kategori seçin</option>
@@ -25,9 +26,7 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-auto">
-                <button class="btn btn-outline-primary" type="submit"><i class="bi bi-funnel"></i> Göster</button>
-            </div>
+            <div class="col-md-auto"><button class="btn btn-outline-primary" type="submit"><i class="bi bi-funnel"></i> Göster</button></div>
         </form>
     </div>
 </div>
@@ -37,13 +36,18 @@
     <div class="col-lg-5">
         <div class="card h-100">
             <div class="card-body">
-                <h2 class="h5 mb-1">{{ secili_ana_kategori.ad }} için alt kategori ekle</h2>
-                <p class="text-secondary small mb-3">Bu ekrandan ana kategori oluşturulmaz; eklediğiniz kayıt doğrudan seçili ana kategoriye bağlanır.</p>
+                <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                    <div>
+                        <h2 class="h5 mb-1">{{ secili_ana_kategori.ad }}</h2>
+                        <p class="text-secondary small mb-0">Bu ana kategoriye bağlı yeni bir alt kategori oluşturun.</p>
+                    </div>
+                    <a href="{% url 'kategori_duzenle' secili_ana_kategori.id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i> Düzenle</a>
+                </div>
                 <form method="post" novalidate>
                     {% csrf_token %}
                     <input type="hidden" name="ana_kategori" value="{{ secili_ana_kategori.id }}">
                     <div class="mb-3">
-                        <label class="form-label" for="{{ form.ad.id_for_label }}">{{ form.ad.label }}</label>
+                        <label class="form-label" for="{{ form.ad.id_for_label }}">Alt kategori adı</label>
                         {{ form.ad }}
                         {% for error in form.ad.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
@@ -52,7 +56,7 @@
                         {{ form.aciklama }}
                         {% for error in form.aciklama.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
-                    <button class="btn btn-primary w-100" type="submit"><i class="bi bi-plus-lg"></i> Alt kategoriyi kaydet</button>
+                    <button class="btn btn-primary w-100" type="submit"><i class="bi bi-plus-lg"></i> Alt Kategoriyi Kaydet</button>
                 </form>
             </div>
         </div>
@@ -67,12 +71,15 @@
                 {% if alt_kategoriler %}
                 <div class="list-group list-group-flush">
                     {% for alt_kategori in alt_kategoriler %}
-                    <div class="list-group-item px-0 d-flex align-items-start">
-                        <i class="bi bi-folder2-open text-warning me-2 mt-1"></i>
-                        <div>
-                            <div class="fw-semibold">{{ alt_kategori.ad }}</div>
-                            {% if alt_kategori.aciklama %}<div class="small text-secondary mt-1">{{ alt_kategori.aciklama }}</div>{% endif %}
+                    <div class="list-group-item px-0 d-flex align-items-start justify-content-between gap-3">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-folder2-open text-warning me-2 mt-1"></i>
+                            <div>
+                                <div class="fw-semibold">{{ alt_kategori.ad }}</div>
+                                {% if alt_kategori.aciklama %}<div class="small text-secondary mt-1">{{ alt_kategori.aciklama }}</div>{% endif %}
+                            </div>
                         </div>
+                        <a href="{% url 'kategori_duzenle' alt_kategori.id %}" class="btn btn-sm btn-outline-primary flex-shrink-0"><i class="bi bi-pencil"></i> Düzenle</a>
                     </div>
                     {% endfor %}
                 </div>
@@ -84,12 +91,10 @@
     </div>
 </div>
 {% else %}
-<div class="card">
-    <div class="card-body text-center py-5">
-        <i class="bi bi-folder2-open fs-2 text-warning"></i>
-        <h2 class="h5 mt-3">Bir ana kategori seçin</h2>
-        <p class="text-secondary mb-0">Alt kategorileri görmek veya yeni alt kategori eklemek için yukarıdan bir ana kategori seçin.</p>
-    </div>
-</div>
+<div class="card"><div class="card-body text-center py-5">
+    <i class="bi bi-folder2-open fs-2 text-warning"></i>
+    <h2 class="h5 mt-3">Bir ana kategori seçin</h2>
+    <p class="text-secondary mb-0">Ana kategori ekleyebilir veya mevcut bir ana kategoriyi seçerek alt kategorilerini yönetebilirsiniz.</p>
+</div></div>
 {% endif %}
 {% endblock %}

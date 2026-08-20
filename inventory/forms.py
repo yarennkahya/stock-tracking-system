@@ -68,12 +68,15 @@ class UrunForm(forms.ModelForm):
         return barkod_no
 
 
-class AltKategoriFormu(forms.ModelForm):
+class KategoriFormu(forms.ModelForm):
     class Meta:
         model = Kategori
         fields = ('ad', 'aciklama')
-        labels = {'ad': 'Alt kategori adı', 'aciklama': 'Açıklama'}
+        labels = {'ad': 'Kategori adı', 'aciklama': 'Açıklama'}
         widgets = {
-            'ad': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Örn. PVC ek parçaları'}),
+            'ad': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Örn. Boru ve ek parçaları'}),
             'aciklama': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+
+
+AltKategoriFormu = KategoriFormu

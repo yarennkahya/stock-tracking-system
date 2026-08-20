@@ -12,15 +12,27 @@
     </div>
     <a href="{% url 'firma_ekle' %}" class="btn btn-primary ms-auto"><i class="bi bi-plus-lg"></i> Firma Ekle</a>
 </div>
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div class="btn-group" role="group" aria-label="Firma görünümü">
+        <a href="{% url 'firma_listesi' %}?gorunum=aktif" class="btn btn-sm {% if gorunum == 'aktif' %}btn-primary{% else %}btn-outline-primary{% endif %}">Aktif Firmalar</a>
+        <a href="{% url 'firma_listesi' %}?gorunum=pasif" class="btn btn-sm {% if gorunum == 'pasif' %}btn-primary{% else %}btn-outline-primary{% endif %}">Pasif Firmalar</a>
+        <a href="{% url 'firma_listesi' %}?gorunum=tum" class="btn btn-sm {% if gorunum == 'tum' %}btn-primary{% else %}btn-outline-primary{% endif %}">Tümü</a>
+    </div>
+    <span class="text-secondary small">Pasife alınan firmalar silinmez; gerektiğinde tekrar aktifleştirilebilir.</span>
+</div>
 <div class="card"><div class="card-body p-0"><div class="table-responsive"><table class="table mb-0">
     <thead>
-        <tr><th>Firma</th><th>Telefon</th><th>Bakiye</th></tr>
+        <tr><th>Firma</th><th>Telefon</th><th>Durum</th><th>Bakiye</th><th class="text-end">İşlem</th></tr>
     </thead>
     <tbody>
         {% for firma in firmalar %}
         <tr>
             <td>{{ firma.ad }}</td>
             <td>{{ firma.telefon }}</td>
+            <td>
+                {% if firma.aktif %}<span class="badge bg-success">Aktif</span>
+                {% else %}<span class="badge bg-secondary">Pasif</span>{% endif %}
+            </td>
             <td>
                 {% if firma.bakiye > 0 %}
                     <span class="badge bg-success">+{{ firma.bakiye }} ₺ (alacaklıyız)</span>
@@ -30,9 +42,23 @@
                     <span class="badge bg-secondary">0 ₺</span>
                 {% endif %}
             </td>
+            <td class="text-end">
+                <div class="d-inline-flex flex-wrap justify-content-end gap-2">
+                    <a href="{% url 'firma_duzenle' firma.id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i> Düzenle</a>
+                    <form method="post" action="{% url 'firma_durum_degistir' firma.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="gorunum" value="{{ gorunum }}">
+                        {% if firma.aktif %}
+                        <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pause-circle"></i> Pasife al</button>
+                        {% else %}
+                        <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-play-circle"></i> Aktifleştir</button>
+                        {% endif %}
+                    </form>
+                </div>
+            </td>
         </tr>
         {% empty %}
-        <tr><td colspan="3">Henüz firma eklenmemiş.</td></tr>
+        <tr><td colspan="5" class="text-center py-4">Bu görünümde firma yok.</td></tr>
         {% endfor %}
     </tbody>
 </table></div></div></div>

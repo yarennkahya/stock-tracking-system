@@ -5,11 +5,12 @@ class Firma(models.Model):
     ad = models.CharField(max_length=200)
     telefon = models.CharField(max_length=20, blank=True, null=True)
     adres = models.TextField(blank=True, null=True)
+    aktif = models.BooleanField(default=True)
 
     def bakiye(self):
-        borclar = self.senetler.filter(tip='borc', durum__in=['bekliyor', 'gecikti']).aggregate(
+        borclar = self.senetler.filter(aktif=True, tip='borc', durum__in=['bekliyor', 'gecikti']).aggregate(
             toplam=models.Sum('tutar'))['toplam'] or 0
-        alacaklar = self.senetler.filter(tip='alacak', durum__in=['bekliyor', 'gecikti']).aggregate(
+        alacaklar = self.senetler.filter(aktif=True, tip='alacak', durum__in=['bekliyor', 'gecikti']).aggregate(
             toplam=models.Sum('tutar'))['toplam'] or 0
         return alacaklar - borclar
 
@@ -34,6 +35,7 @@ class Senet(models.Model):
     vade_tarihi = models.DateField()
     durum = models.CharField(max_length=10, choices=DURUM_SECENEKLERI, default='bekliyor')
     aciklama = models.CharField(max_length=255, blank=True, null=True)
+    aktif = models.BooleanField(default=True)
     olusturulma_tarihi = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

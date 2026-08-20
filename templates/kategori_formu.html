@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ sayfa_basligi }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex" style="gap: var(--space-4);">
+        <div class="page-header-icon"><i class="bi bi-folder2-open"></i></div>
+        <div>
+            <h1>{{ sayfa_basligi }}</h1>
+            <p class="page-header-sub">{{ sayfa_aciklamasi }}</p>
+        </div>
+    </div>
+</div>
+<div class="card" style="max-width: 620px;"><div class="card-body">
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="mb-3">
+            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+        </div>
+        {% endfor %}
+        <div class="d-flex gap-2 justify-content-end">
+            {% if geri_donus_url %}<a href="{{ geri_donus_url }}" class="btn btn-outline-secondary">Vazgeç</a>
+            {% else %}<a href="{% url 'kategori_listesi' %}" class="btn btn-outline-secondary">Vazgeç</a>{% endif %}
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> {{ submit_etiketi }}</button>
+        </div>
+    </form>
+</div></div>
+{% endblock %}

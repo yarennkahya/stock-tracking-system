@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import PasswordResetForm, UserCreationForm
 from django.contrib.auth.models import User
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
 from .models import Firma, Senet
@@ -97,4 +98,7 @@ class SenetFormu(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['firma'].queryset = Firma.objects.order_by('ad')
+        firma_filtresi = Q(aktif=True)
+        if self.instance and self.instance.pk:
+            firma_filtresi |= Q(pk=self.instance.firma_id)
+        self.fields['firma'].queryset = Firma.objects.filter(firma_filtresi).order_by('ad')

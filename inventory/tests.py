@@ -56,6 +56,25 @@ class HizliUrunEklemeTestleri(TestCase):
         self.assertRedirects(response, f"{reverse('kategori_listesi')}?ana_kategori={self.kategori.parent_id}")
         self.assertTrue(Kategori.objects.filter(ad='PPRC ek parçaları', parent=self.kategori.parent).exists())
 
+    def test_ana_ve_alt_kategori_duzenlenebilir(self):
+        response = self.client.post(
+            reverse('ana_kategori_ekle'),
+            {'ad': 'Vitrifiye', 'aciklama': 'Banyo ürünleri'},
+        )
+
+        ana_kategori = Kategori.objects.get(ad='Vitrifiye', parent__isnull=True)
+        self.assertRedirects(response, f"{reverse('kategori_listesi')}?ana_kategori={ana_kategori.id}")
+
+        response = self.client.post(
+            reverse('kategori_duzenle', args=[self.kategori.id]),
+            {'ad': 'PVC bağlantı parçaları', 'aciklama': 'Güncel açıklama'},
+        )
+
+        self.assertRedirects(response, f"{reverse('kategori_listesi')}?ana_kategori={self.kategori.parent_id}")
+        self.kategori.refresh_from_db()
+        self.assertEqual(self.kategori.ad, 'PVC bağlantı parçaları')
+        self.assertEqual(self.kategori.aciklama, 'Güncel açıklama')
+
     def test_kategori_ekrani_ana_kategori_secmeden_alt_kategori_formunu_gostermez(self):
         response = self.client.get(reverse('kategori_listesi'))
 

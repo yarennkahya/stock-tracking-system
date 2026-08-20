@@ -1,0 +1,17 @@
+<div class="d-inline-flex flex-wrap justify-content-end gap-2">
+    <a href="{% url 'senet_duzenle' senet.id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i> Düzenle</a>
+    <form method="post" action="{% url 'senet_durum_degistir' senet.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="gorunum" value="{{ gorunum }}">
+        {% if senet.aktif %}
+        <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pause-circle"></i> Pasife al</button>
+        {% else %}
+        <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-play-circle"></i> Aktifleştir</button>
+        {% endif %}
+    </form>
+    <form method="post" action="{% url 'senet_sil' senet.id %}" onsubmit="return confirm('Bu senet kalıcı olarak silinsin mi?');">
+        {% csrf_token %}
+        <input type="hidden" name="gorunum" value="{{ gorunum }}">
+        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Sil</button>
+    </form>
+</div>

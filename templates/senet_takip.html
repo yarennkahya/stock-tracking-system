@@ -12,56 +12,23 @@
     </div>
     <a href="{% url 'senet_ekle' %}" class="btn btn-primary ms-auto"><i class="bi bi-plus-lg"></i> Senet Ekle</a>
 </div>
-{% if gecikmis %}
-<div class="alert alert-danger">
-    <strong>⚠️ {{ gecikmis|length }} adet gecikmiş senet var!</strong>
+
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div class="btn-group" role="group" aria-label="Senet görünümü">
+        <a href="{% url 'senet_takip' %}" class="btn btn-sm {% if gorunum == 'aktif' %}btn-primary{% else %}btn-outline-primary{% endif %}">Aktif Takip</a>
+        <a href="{% url 'senet_takip' %}?gorunum=pasif" class="btn btn-sm {% if gorunum == 'pasif' %}btn-primary{% else %}btn-outline-primary{% endif %}">Pasif Senetler</a>
+    </div>
+    <span class="text-secondary small">Pasife alınan senetler vade uyarılarından çıkarılır; silme işlemi kalıcıdır.</span>
 </div>
-<table class="table">
-    <thead><tr><th>Firma</th><th>Tip</th><th>Tutar</th><th>Vade</th></tr></thead>
-    <tbody>
-        {% for senet in gecikmis %}
-        <tr class="table-danger">
-            <td>{{ senet.firma.ad }}</td>
-            <td>{{ senet.get_tip_display }}</td>
-            <td>{{ senet.tutar }} ₺</td>
-            <td>{{ senet.vade_tarihi }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+
+{% if gorunum == 'pasif' %}
+    {% include 'partials/senet_tablosu.html' with baslik='Pasif Senetler' senetler=pasif_senetler satir_sinifi='table-secondary' bos_metin='Pasif senet yok.' %}
+{% else %}
+    {% if gecikmis %}
+        <div class="alert alert-danger"><strong>⚠️ {{ gecikmis|length }} adet gecikmiş senet var!</strong></div>
+        {% include 'partials/senet_tablosu.html' with baslik='Gecikmiş Senetler' senetler=gecikmis satir_sinifi='table-danger' bos_metin='Gecikmiş senet yok.' %}
+    {% endif %}
+    {% include 'partials/senet_tablosu.html' with baslik='Yaklaşan Vadeler (7 gün içinde)' senetler=yaklasan satir_sinifi='table-warning' bos_metin='Yaklaşan vade yok.' %}
+    {% include 'partials/senet_tablosu.html' with baslik='Diğer Bekleyen Senetler' senetler=diger_bekleyenler satir_sinifi='' bos_metin='Bekleyen senet yok.' %}
 {% endif %}
-
-<h4 class="mt-4">Yaklaşan Vadeler (7 gün içinde)</h4>
-<table class="table">
-    <thead><tr><th>Firma</th><th>Tip</th><th>Tutar</th><th>Vade</th></tr></thead>
-    <tbody>
-        {% for senet in yaklasan %}
-        <tr class="table-warning">
-            <td>{{ senet.firma.ad }}</td>
-            <td>{{ senet.get_tip_display }}</td>
-            <td>{{ senet.tutar }} ₺</td>
-            <td>{{ senet.vade_tarihi }}</td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="4">Yaklaşan vade yok.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-<h4 class="mt-4">Diğer Bekleyen Senetler</h4>
-<table class="table">
-    <thead><tr><th>Firma</th><th>Tip</th><th>Tutar</th><th>Vade</th></tr></thead>
-    <tbody>
-        {% for senet in diger_bekleyenler %}
-        <tr>
-            <td>{{ senet.firma.ad }}</td>
-            <td>{{ senet.get_tip_display }}</td>
-            <td>{{ senet.tutar }} ₺</td>
-            <td>{{ senet.vade_tarihi }}</td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="4">Yok.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
 {% endblock %}

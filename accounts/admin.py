@@ -9,11 +9,12 @@ class SenetInline(admin.TabularInline):
 
 @admin.register(Firma)
 class FirmaAdmin(admin.ModelAdmin):
-    list_display = ('ad', 'telefon', 'bakiye')
+    list_display = ('ad', 'telefon', 'aktif', 'bakiye')
+    list_filter = ('aktif',)
     inlines = [SenetInline]
 
 
 @admin.register(Senet)
 class SenetAdmin(admin.ModelAdmin):
-    list_display = ('firma', 'tip', 'tutar', 'vade_tarihi', 'durum')
-    list_filter = ('tip', 'durum')
+    list_display = ('firma', 'tip', 'tutar', 'vade_tarihi', 'durum', 'aktif')
+    list_filter = ('tip', 'durum', 'aktif')

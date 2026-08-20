@@ -42,6 +42,28 @@ class HesapAkisiTestleri(TestCase):
         self.assertRedirects(response, reverse('firma_listesi'))
         self.assertTrue(Firma.objects.filter(ad='Yeni Tedarikçi').exists())
 
+    def test_firma_duzenlenip_pasife_alinabilir(self):
+        user = User.objects.create_user('deneme_kullanici', 'deneme@example.com', 'GucluSifre123!')
+        firma = Firma.objects.create(ad='Eski Firma', telefon='02120000000')
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse('firma_duzenle', args=[firma.id]),
+            {'ad': 'Güncel Firma', 'telefon': '05320000000', 'adres': 'İstanbul'},
+        )
+
+        self.assertRedirects(response, reverse('firma_listesi'))
+        firma.refresh_from_db()
+        self.assertEqual(firma.ad, 'Güncel Firma')
+        self.assertEqual(firma.telefon, '05320000000')
+
+        response = self.client.post(reverse('firma_durum_degistir', args=[firma.id]), {'gorunum': 'aktif'})
+
+        self.assertRedirects(response, f'{reverse("firma_listesi")}?gorunum=aktif')
+        firma.refresh_from_db()
+        self.assertFalse(firma.aktif)
+        self.assertContains(self.client.get(f'{reverse("firma_listesi")}?gorunum=pasif'), 'Güncel Firma')
+
     def test_senet_ekleme_ekranindan_senet_kaydedilir(self):
         user = User.objects.create_user('deneme_kullanici', 'deneme@example.com', 'GucluSifre123!')
         firma = Firma.objects.create(ad='Yeni Tedarikçi')
@@ -57,6 +79,39 @@ class HesapAkisiTestleri(TestCase):
 
         self.assertRedirects(response, reverse('senet_takip'))
         self.assertTrue(Senet.objects.filter(firma=firma, tutar='1250.50').exists())
+
+    def test_senet_duzenlenip_pasife_alinabilir_ve_silinebilir(self):
+        user = User.objects.create_user('deneme_kullanici', 'deneme@example.com', 'GucluSifre123!')
+        firma = Firma.objects.create(ad='Yeni Tedarikçi')
+        senet = Senet.objects.create(
+            firma=firma, tip='borc', tutar='1250.50', vade_tarihi=date.today() + timedelta(days=5),
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse('senet_duzenle', args=[senet.id]),
+            {
+                'firma': firma.id, 'tip': 'alacak', 'tutar': '1600.00',
+                'vade_tarihi': date.today() + timedelta(days=8), 'durum': 'bekliyor', 'aciklama': 'Güncellendi',
+            },
+        )
+
+        self.assertRedirects(response, reverse('senet_takip'))
+        senet.refresh_from_db()
+        self.assertEqual(senet.tip, 'alacak')
+        self.assertEqual(str(senet.tutar), '1600.00')
+
+        response = self.client.post(reverse('senet_durum_degistir', args=[senet.id]), {'gorunum': 'aktif'})
+        self.assertRedirects(response, f'{reverse("senet_takip")}?gorunum=aktif')
+        senet.refresh_from_db()
+        self.assertFalse(senet.aktif)
+        pasif_liste = self.client.get(f'{reverse("senet_takip")}?gorunum=pasif')
+        self.assertContains(pasif_liste, '1600,00')
+        self.assertTrue(pasif_liste.context['pasif_senetler'].filter(id=senet.id).exists())
+
+        response = self.client.post(reverse('senet_sil', args=[senet.id]), {'gorunum': 'pasif'})
+        self.assertRedirects(response, f'{reverse("senet_takip")}?gorunum=pasif')
+        self.assertFalse(Senet.objects.filter(id=senet.id).exists())
 
     def test_giris_yapan_kullanici_hesap_ozetini_gorur(self):
         user = User.objects.create_user(
