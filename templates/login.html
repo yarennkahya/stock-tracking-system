@@ -1,13 +1,14 @@
-{% extends 'base.html' %}
+{% extends 'auth_base.html' %}
 
 {% block title %}Giriş Yap{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-5">
-        <div class="card mt-4">
+        <div class="card auth-form-card">
             <div class="card-body">
-                <h2 class="mb-4">Giriş Yap</h2>
+                <h2 class="mb-2">Hoş geldiniz</h2>
+                <p class="text-secondary mb-4">Hesabınıza giriş yaparak iş akışınıza devam edin.</p>
 
                 {% if form.errors %}
                     <div class="alert alert-danger">Kullanıcı adı veya şifre hatalı.</div>

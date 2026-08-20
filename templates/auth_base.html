@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block extra_head %}
+<style>
+    .auth-shell {
+        min-height: calc(100vh - 5px);
+        display: grid;
+        grid-template-columns: minmax(320px, .95fr) minmax(440px, 1.05fr);
+        background: var(--color-surface);
+    }
+    .auth-showcase {
+        position: relative;
+        overflow: hidden;
+        padding: clamp(2rem, 7vw, 6.5rem);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        color: #FFFFFF;
+        background:
+            radial-gradient(circle at 16% 12%, rgba(243,164,26,.32), transparent 19rem),
+            radial-gradient(circle at 88% 84%, rgba(22,129,168,.5), transparent 25rem),
+            linear-gradient(145deg, #061F34 0%, var(--color-brand-deep) 45%, var(--color-brand-mid) 100%);
+    }
+    .auth-showcase::before,
+    .auth-showcase::after {
+        content: '';
+        position: absolute;
+        pointer-events: none;
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius: 50%;
+    }
+    .auth-showcase::before { width: 28rem; height: 28rem; right: -14rem; top: -10rem; }
+    .auth-showcase::after { width: 20rem; height: 20rem; left: -11rem; bottom: -9rem; }
+    .auth-showcase-inner { position: relative; max-width: 31rem; }
+    .auth-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: .75rem;
+        color: #FFFFFF;
+        text-decoration: none;
+        font-weight: 800;
+        margin-bottom: clamp(3.5rem, 11vh, 8rem);
+    }
+    .auth-brand .brand-monogram { width: 48px; height: 48px; font-size: 1.25rem; }
+    .auth-brand-title { font-size: 1.05rem; line-height: 1.15; }
+    .auth-showcase h1 { color: #FFFFFF; font-size: clamp(2rem, 3.3vw, 3.25rem); line-height: 1.12; letter-spacing: -.04em; margin-bottom: 1rem; }
+    .auth-showcase-copy { color: rgba(255,255,255,.78); font-size: 1.03rem; max-width: 29rem; }
+    .auth-feature-list { display: grid; gap: .8rem; margin: 2rem 0 0; padding: 0; list-style: none; }
+    .auth-feature-list li { display: flex; align-items: center; gap: .7rem; color: rgba(255,255,255,.9); font-weight: 600; }
+    .auth-feature-list i { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; color: var(--color-brand-gold); background: rgba(255,255,255,.1); }
+    .auth-panel {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        background:
+            radial-gradient(circle at 100% 0, rgba(22,129,168,.1), transparent 23rem),
+            var(--color-bg);
+    }
+    .auth-panel-brand { display: none; }
+    .auth-page-content { width: min(100%, 27rem); }
+    .auth-page-content .row { --bs-gutter-x: 0; }
+    .auth-page-content .row > [class*="col-"] { width: 100%; }
+    .auth-page-content .card,
+    .auth-form-card {
+        margin-top: 0 !important;
+        border: 1px solid rgba(22,129,168,.16);
+        background: color-mix(in srgb, var(--color-surface) 96%, #E4F5FA);
+        box-shadow: 0 18px 45px rgba(8,44,71,.12);
+    }
+    .auth-page-content .card-body { padding: clamp(1.5rem, 4vw, 2.25rem); }
+    .auth-page-content h2 { font-size: 1.55rem; letter-spacing: -.03em; }
+    .auth-page-content .form-label { color: var(--color-ink); font-size: .9rem; font-weight: 700; }
+    .auth-page-content input:not([type="checkbox"]),
+    .auth-page-content select {
+        display: block;
+        width: 100%;
+        padding: .7rem .85rem;
+        border: 1px solid #CBD5DC;
+        border-radius: 8px;
+        background: var(--color-surface);
+        color: var(--color-ink);
+        outline: 0;
+    }
+    .auth-page-content input:focus,
+    .auth-page-content select:focus {
+        border-color: var(--color-brand-bright);
+        box-shadow: 0 0 0 .2rem rgba(22,129,168,.16);
+    }
+    .auth-page-content .btn { min-height: 48px; }
+    .auth-security-note { margin-top: 1.5rem; color: var(--color-steel); font-size: .78rem; text-align: center; }
+    .auth-security-note i { color: var(--color-ok); }
+    [data-theme="dark"] .auth-panel { background: var(--color-bg); }
+    [data-theme="dark"] .auth-page-content .card,
+    [data-theme="dark"] .auth-form-card { border-color: #39434D; background: var(--color-surface); }
+    [data-theme="dark"] .auth-page-content input:not([type="checkbox"]),
+    [data-theme="dark"] .auth-page-content select { background: #191D21; border-color: #414850; }
+    @media (max-width: 991.98px) {
+        .auth-shell { display: block; }
+        .auth-showcase { display: none; }
+        .auth-panel { min-height: calc(100vh - 5px); padding: 1.5rem; }
+        .auth-panel-brand { display: inline-flex; align-items: center; gap: .65rem; margin: 0 0 2rem; color: var(--color-brand-deep); text-decoration: none; font-weight: 800; }
+        .auth-panel-brand .brand-monogram { width: 40px; height: 40px; border-radius: 10px; font-size: 1rem; }
+        [data-theme="dark"] .auth-panel-brand { color: var(--color-ink); }
+    }
+</style>
+{% endblock %}
+
+{% block app_shell %}
+<main class="auth-shell">
+    <section class="auth-showcase" aria-label="Stok ve satış yönetimi hakkında">
+        <div class="auth-showcase-inner">
+            <a href="{% url 'login' %}" class="auth-brand">
+                <span class="brand-monogram">YK</span>
+                <span class="auth-brand-title">Stok ve satış<br>yönetimi</span>
+            </a>
+            <h1>İşletmenizin günlük akışı tek ekranda.</h1>
+            <p class="auth-showcase-copy">Ürünlerinizi, barkodlarınızı, satışlarınızı ve stok durumunuzu düzenli biçimde yönetin.</p>
+            <ul class="auth-feature-list">
+                <li><i class="bi bi-upc-scan"></i> Barkodla hızlı ürün ve satış işlemi</li>
+                <li><i class="bi bi-cart-check"></i> Sepet ve ödeme takibi</li>
+                <li><i class="bi bi-graph-up-arrow"></i> Günlük, aylık ve yıllık satış raporları</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="auth-panel">
+        <a href="{% url 'login' %}" class="auth-panel-brand">
+            <span class="brand-monogram">YK</span>
+            <span>Stok ve satış yönetimi</span>
+        </a>
+        <div class="auth-page-content">
+            {% if messages %}
+                <div class="app-messages">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags|default:'info' }} mb-2" role="alert">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            {% block content %}{% endblock %}
+            <p class="auth-security-note mb-0"><i class="bi bi-shield-check"></i> Güvenli işletme yönetimi</p>
+        </div>
+    </section>
+</main>
+{% endblock %}

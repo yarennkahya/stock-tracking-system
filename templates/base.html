@@ -416,11 +416,13 @@
         .page-header h1 { margin: 0; font-size: 1.55rem; }
         .page-header-sub { margin: .3rem 0 0; color: var(--color-steel); font-size: .98rem; }
     </style>
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
 
     <div class="barcode-strip"></div>
 
+    {% block app_shell %}
     <div class="app-shell">
 
         <aside class="sidebar d-flex flex-column">
@@ -487,6 +489,7 @@
 
         </div>
     </div>
+    {% endblock %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     {% block page_scripts %}{% endblock %}

@@ -8,6 +8,14 @@ from .models import Firma, Senet
 
 
 class HesapAkisiTestleri(TestCase):
+    def test_giris_ekrani_uygulama_menusu_yerine_karsilama_duzenini_kullanir(self):
+        response = self.client.get(reverse('login'))
+
+        self.assertContains(response, 'auth-shell')
+        self.assertContains(response, 'İşletmenizin günlük akışı tek ekranda.')
+        self.assertNotContains(response, 'class="sidebar d-flex flex-column"')
+        self.assertNotContains(response, 'id="mobileSidebar"')
+
     def test_yaklasan_senet_yedi_gunluk_listede_gorunur(self):
         user = User.objects.create_user('deneme_kullanici', 'deneme@example.com', 'GucluSifre123!')
         firma = Firma.objects.create(ad='Demo Firma')
